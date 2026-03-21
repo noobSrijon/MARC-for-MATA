@@ -1,8 +1,8 @@
 const navItems = [
-  { icon: "map", label: "Map", active: true },
-  { icon: "leaderboard", label: "Leaderboard", active: false },
-  { icon: "accessibility_new", label: "Access", active: false },
-  { icon: "dashboard", label: "Dashboard", active: false },
+  { icon: "map", label: "Map", active: true, href: "/" },
+  { icon: "leaderboard", label: "Leaderboard", active: false, href: "#" },
+  { icon: "accessibility_new", label: "Access", active: false, href: "/access" },
+  { icon: "dashboard", label: "Dashboard", active: false, href: "#" },
 ];
 
 export default function MapPanel() {
@@ -68,7 +68,7 @@ export default function MapPanel() {
         {navItems.map((item) => (
           <a
             key={item.label}
-            href="#"
+            href={item.href}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold backdrop-blur-md shadow-sm transition-all active:scale-95 ${
               item.active
                 ? "bg-primary text-on-primary"

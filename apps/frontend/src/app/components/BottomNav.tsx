@@ -1,8 +1,8 @@
 const navItems = [
-  { icon: "map", label: "Map", active: true, fill: true },
-  { icon: "leaderboard", label: "Leaderboard", active: false, fill: false },
-  { icon: "accessibility_new", label: "Access", active: false, fill: false },
-  { icon: "dashboard", label: "Dashboard", active: false, fill: false },
+  { icon: "map", label: "Map", active: true, fill: true, href: "/" },
+  { icon: "leaderboard", label: "Leaderboard", active: false, fill: false, href: "#" },
+  { icon: "accessibility_new", label: "Access", active: false, fill: false, href: "/access" },
+  { icon: "dashboard", label: "Dashboard", active: false, fill: false, href: "#" },
 ];
 
 export default function BottomNav() {
@@ -13,7 +13,7 @@ export default function BottomNav() {
           <a
             key={item.label}
             className="flex flex-col items-center justify-center bg-primary text-on-primary rounded-2xl px-5 py-2 scale-105 shadow-lg active:scale-90 transition-transform duration-150"
-            href="#"
+            href={item.href}
           >
             <span
               className="material-symbols-outlined"
@@ -33,7 +33,7 @@ export default function BottomNav() {
           <a
             key={item.label}
             className="flex flex-col items-center justify-center text-on-surface-variant px-4 py-2 opacity-70 hover:opacity-100 hover:bg-surface-container rounded-xl transition-all active:scale-90 duration-150"
-            href="#"
+            href={item.href}
           >
             <span className="material-symbols-outlined">{item.icon}</span>
             <span className="font-label text-[10px] uppercase font-bold tracking-widest mt-1">

@@ -12,7 +12,7 @@ export default function Header() {
           <nav className="hidden md:flex items-center gap-6">
             <a
               className="text-primary font-bold border-b-2 border-primary hover:text-primary/80 transition-colors active:scale-95 duration-200"
-              href="#"
+              href="/"
             >
               Map
             </a>
@@ -24,7 +24,7 @@ export default function Header() {
             </a>
             <a
               className="text-on-surface-variant font-medium hover:text-primary transition-colors active:scale-95 duration-200"
-              href="#"
+              href="/access"
             >
               Access
             </a>

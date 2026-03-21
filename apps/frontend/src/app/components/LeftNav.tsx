@@ -1,10 +1,10 @@
 import Image from "next/image";
 
 const navItems = [
-  { icon: "map", label: "Map", active: true },
-  { icon: "leaderboard", label: "Leaderboard", active: false },
-  { icon: "accessibility_new", label: "Access", active: false },
-  { icon: "dashboard", label: "Dashboard", active: false },
+  { icon: "map", label: "Map", active: true, href: "/" },
+  { icon: "leaderboard", label: "Leaderboard", active: false, href: "#" },
+  { icon: "accessibility_new", label: "Access", active: false, href: "/access" },
+  { icon: "dashboard", label: "Dashboard", active: false, href: "#" },
 ];
 
 export default function LeftNav() {
@@ -25,7 +25,7 @@ export default function LeftNav() {
         {navItems.map((item) => (
           <a
             key={item.label}
-            href="#"
+            href={item.href}
             className={`flex flex-col items-center justify-center w-10 h-10 rounded-lg gap-0.5 transition-all active:scale-95 ${
               item.active
                 ? "bg-primary text-on-primary"
