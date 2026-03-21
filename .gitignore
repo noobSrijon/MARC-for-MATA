@@ -1,4 +1,4 @@
 .idea
 .env
-.env.example
 .env.local
+# .env.example is committed as a template for the team
