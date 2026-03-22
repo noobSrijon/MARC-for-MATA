@@ -8,6 +8,7 @@ class Config:
     """Base configuration."""
     SECRET_KEY = os.getenv("SECRET_KEY")
     MONGO_URI = os.getenv("MONGO_URI")
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max upload
     MATA_API_BASE_URL = os.getenv("MATA_API_BASE_URL")
     MATA_VEHICLES_PATH = os.getenv("MATA_VEHICLES_PATH")
     MATA_LIGNES = os.getenv("MATA_LIGNES")

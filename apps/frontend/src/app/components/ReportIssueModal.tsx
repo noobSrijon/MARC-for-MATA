@@ -60,12 +60,26 @@ async function uploadImage(file: File): Promise<string | null> {
   }
 }
 
+async function saveReport(report: IssueReport): Promise<boolean> {
+  try {
+    const res = await fetch(`${API}/api/reports`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(report),
+    });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
 export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssueModalProps) {
   const [selectedType, setSelectedType] = useState<number | null>(null);
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<SelectedImage[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const routeLabel = bus.routeShortName ? `Route ${bus.routeShortName}` : "Bus";
@@ -117,6 +131,15 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
       imageUrls: uploadedUrls,
       timestamp: Date.now(),
     };
+
+    setSubmitError(null);
+    const saved = await saveReport(report);
+    if (!saved) {
+      setSubmitError("Failed to save report. Please try again.");
+      setSubmitting(false);
+      return;
+    }
+
     onSubmit(report);
     setSubmitting(false);
     setSubmitted(true);
@@ -282,6 +305,9 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
 
         {/* Footer */}
         <div className="p-5 pt-3 border-t border-surface-container shrink-0">
+          {submitError && (
+            <p className="text-sm text-red-600 font-medium mb-2">{submitError}</p>
+          )}
           <button
             onClick={handleSubmit}
             disabled={selectedType === null || submitting}
