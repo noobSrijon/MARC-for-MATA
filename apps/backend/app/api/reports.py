@@ -1,9 +1,3 @@
-"""
-Reports API routes.
-
-Handles image uploads for accessibility reports and serves stored images from MongoDB GridFS.
-"""
-
 import io
 import logging
 import os
@@ -17,7 +11,76 @@ from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 
-# Max file size: 5MB
+# Severity base scores per issue type (0–100)
+_ISSUE_BASE_SCORES = {
+    "broken ramp": 90,
+    "ramp broken": 90,
+    "wheelchair ramp": 88,
+    "elevator out": 85,
+    "elevator broken": 85,
+    "blocked path": 75,
+    "safety hazard": 80,
+    "crowded bus": 55,
+    "overcrowded": 55,
+    "signage error": 35,
+    "wrong sign": 35,
+    "other": 50,
+}
+
+
+def _compute_severity(issue_type: str, description: str) -> int:
+    """
+    Compute a severity score 0–100 for a report.
+    Tries OpenRouter AI first; falls back to rule-based scoring.
+    """
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if api_key:
+        try:
+            prompt = (
+                f"Rate the severity of this bus accessibility issue from 0 to 100 "
+                f"(100 = life-threatening emergency, 0 = trivial cosmetic issue).\n"
+                f"Issue type: {issue_type}\n"
+                f"Description: {description or 'No description provided.'}\n\n"
+                f"Respond with ONLY a JSON object like: {{\"score\": 75}}"
+            )
+            response = http_requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://marc-for-mata.app",
+                    "X-Title": "MARC for MATA",
+                },
+                json={
+                    "model": "openai/gpt-3.5-turbo",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 30,
+                },
+                timeout=8,
+            )
+            result = response.json()
+            import json as _json
+            content = result["choices"][0]["message"]["content"].strip()
+            parsed = _json.loads(content)
+            score = int(parsed.get("score", 50))
+            return max(0, min(100, score))
+        except Exception as e:
+            logger.warning("AI severity scoring failed, using rule-based: %s", e)
+
+    # Rule-based fallback
+    key = issue_type.lower().strip()
+    base = 50
+    for pattern, score in _ISSUE_BASE_SCORES.items():
+        if pattern in key:
+            base = score
+            break
+
+    # Boost score if description is detailed (more words = more serious context)
+    word_count = len(description.split()) if description else 0
+    boost = min(10, word_count // 5)
+    return min(100, base + boost)
+
+
 MAX_IMAGE_SIZE = 5 * 1024 * 1024
 ALLOWED_CONTENT_TYPES = {"image/jpeg", "image/png", "image/gif", "image/webp"}
 
@@ -44,11 +107,7 @@ def _get_gridfs():
 @bp.route("", methods=["GET", "POST"])
 @bp.route("/", methods=["GET", "POST"])
 def reports():
-    """
-    GET /api/reports - List recent reports from the database.
-                       Optionally filter by ?route_short_name=X
-    POST /api/reports - Create a new report (issue type, description, bus info, image URLs).
-    """
+  
     db = _get_db()
     if db is None:
         return jsonify({"error": "Storage not configured"}), 503
@@ -78,25 +137,31 @@ def reports():
         if field not in data:
             return jsonify({"error": f"Missing required field: {field}"}), 400
 
+    issue_type = data["issueType"]
+    description = (data.get("description") or "").strip()
+    severity_score = _compute_severity(issue_type, description)
+
     report = {
         "id": data.get("id") or f"rpt-{ObjectId()}",
         "busId": data["busId"],
         "equipmentNumber": data["equipmentNumber"],
         "routeShortName": data.get("routeShortName"),
         "routeLongName": data.get("routeLongName"),
-        "issueType": data["issueType"],
+        "issueType": issue_type,
         "issueIcon": data["issueIcon"],
-        "description": (data.get("description") or "").strip(),
+        "description": description,
         "imageUrls": data.get("imageUrls") or [],
         "timestamp": data.get("timestamp") or int(time.time() * 1000),
         "likes": 0,
         "dislikes": 0,
+        "severityScore": severity_score,
+        "resolved": False,
     }
 
     try:
         result = db.reports.insert_one(report)
         report["_id"] = str(result.inserted_id)
-        return jsonify({"ok": True, "id": report["id"]}), 201
+        return jsonify({"ok": True, "id": report["id"], "severityScore": severity_score}), 201
     except Exception as e:
         logger.exception("Failed to save report: %s", e)
         return jsonify({"error": "Failed to save report"}), 500
@@ -167,7 +232,6 @@ def ai_note():
     if not docs:
         return jsonify({"note": "No reports available yet for this route."})
 
-    # Build report context text
     report_lines = []
     for d in docs:
         issue = d.get("issueType", "Unknown issue")

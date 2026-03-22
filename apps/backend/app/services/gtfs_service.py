@@ -35,7 +35,7 @@ class GTFSService:
     def load(self):
         if self._loaded:
             return
-        logger.info("Loading GTFS data from %s", GTFS_DIR)
+        #logger.info("Loading GTFS data from %s", GTFS_DIR)
         self._load_routes()
         self._load_stops()
         self._load_calendar()
@@ -163,7 +163,7 @@ class GTFSService:
         }
 
     def route_terminals(self, route_id: str) -> tuple[str | None, str | None]:
-        """Return (first_stop_name, last_stop_name) for a route."""
+        
         stops = self.get_route_stops(route_id)
         if not stops:
             return None, None
@@ -223,7 +223,6 @@ class GTFSService:
         return stops
 
     def _parse_gtfs_minutes(self, time_str: str) -> int | None:
-        """Parse GTFS HH:MM:SS time (may exceed 24:00) into minutes since midnight."""
         if not time_str:
             return None
         try:
@@ -270,13 +269,11 @@ class GTFSService:
         now = datetime.now(MEMPHIS_TZ)
         now_minutes = now.hour * 60 + now.minute
 
-        # Today's upcoming trips
         today_active = self._active_service_ids_for_date(now.date())
         today_deps = self._departures_for_route_on_date(route_id, from_ids, today_active, after_minutes=now_minutes)
         if today_deps:
             return {"departures": [self._fmt_minutes(d) for d in today_deps[:limit]], "next_service": None}
 
-        # Look ahead up to 7 days
         from datetime import timedelta
         day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
         for offset in range(1, 8):

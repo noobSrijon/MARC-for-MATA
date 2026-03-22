@@ -192,8 +192,31 @@ function ReportCard({
   onVote: (id: string, vote: "like" | "dislike") => void;
 }) {
   const images = report.imageUrls ?? [];
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   return (
     <div className="bg-white rounded-xl border border-surface-container p-2.5">
+      {/* Lightbox modal */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            className="absolute top-4 right-4 text-white material-symbols-outlined text-3xl"
+            onClick={() => setLightboxUrl(null)}
+          >
+            close
+          </button>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxUrl}
+            alt="Report image"
+            className="max-w-[90vw] max-h-[90vh] rounded-xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       <div className="flex items-start gap-2">
         <span className="material-symbols-outlined text-[18px] text-tertiary mt-0.5 shrink-0">
           {report.issueIcon || "flag"}
@@ -214,14 +237,14 @@ function ReportCard({
       {images.length > 0 && (
         <div className="flex gap-1.5 mt-2 flex-wrap">
           {images.map((url, i) => (
-            <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+            <button key={i} onClick={() => setLightboxUrl(url)}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={url}
                 alt={`Report image ${i + 1}`}
-                className="w-14 h-14 rounded-lg object-cover border border-surface-container hover:opacity-80 transition-opacity"
+                className="w-14 h-14 rounded-lg object-cover border border-surface-container hover:opacity-80 transition-opacity cursor-pointer"
               />
-            </a>
+            </button>
           ))}
         </div>
       )}

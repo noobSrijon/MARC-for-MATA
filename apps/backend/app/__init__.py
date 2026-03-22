@@ -3,7 +3,7 @@ from flask_cors import CORS
 
 from config.settings import config
 
-from app.api import vehicles_bp, gtfs_bp, reports_bp
+from app.api import vehicles_bp, gtfs_bp, reports_bp, admin_bp
 from app.services.gtfs_service import gtfs
 
 
@@ -15,6 +15,7 @@ def create_app(config_name="development"):
     app.register_blueprint(vehicles_bp)
     app.register_blueprint(gtfs_bp)
     app.register_blueprint(reports_bp)
+    app.register_blueprint(admin_bp)
 
     # Load GTFS static data once at startup (in-memory cache)
     with app.app_context():

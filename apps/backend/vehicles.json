@@ -1,0 +1,736 @@
+{
+    "vehicule": [
+        {
+            "localisation": {
+                "lat": 35.142951986358696,
+                "lng": -90.00314109255325,
+                "cap": 274
+            },
+            "conduite": {
+                "idLigne": 103132,
+                "vitesse": 7,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "POPLAR @BELVEDERE",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 20020,
+            "vehiculeLoad": "16%",
+            "type": "Bus",
+            "numeroEquipement": "4017"
+        },
+        {
+            "localisation": {
+                "lat": 35.172659034498594,
+                "lng": -90.00042053839427,
+                "cap": 93
+            },
+            "conduite": {
+                "idLigne": 103139,
+                "vitesse": 19,
+                "destination": "AMERICAN WAY TR",
+                "avanceRetard": "2 min late",
+                "arretSuiv": {
+                    "nomCommercial": "CHELSEA @MCLEAN",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 19037,
+            "vehiculeLoad": "8%",
+            "type": "Bus",
+            "numeroEquipement": "4028"
+        },
+        {
+            "localisation": {
+                "lat": 35.1402745157599,
+                "lng": -90.02813428703996,
+                "cap": 197
+            },
+            "conduite": {
+                "idLigne": 103136,
+                "vitesse": 0,
+                "destination": "CENTENNIAL DR @ HACKS CROSS RD",
+                "avanceRetard": "3 min late",
+                "arretSuiv": {
+                    "nomCommercial": "PAULINE atMADISON",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 19042,
+            "vehiculeLoad": "14%",
+            "type": "Bus",
+            "numeroEquipement": "21209"
+        },
+        {
+            "localisation": {
+                "lat": 35.160502111807595,
+                "lng": -89.99719253962385,
+                "cap": 99
+            },
+            "conduite": {
+                "idLigne": 103131,
+                "vitesse": 8,
+                "destination": "METHODIST HOSPI",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "JACKSON @MCLEAN",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 19043,
+            "vehiculeLoad": "24%",
+            "type": "Bus",
+            "numeroEquipement": "21212"
+        },
+        {
+            "localisation": {
+                "lat": 35.18126749741525,
+                "lng": -89.93444504172514,
+                "cap": 216
+            },
+            "conduite": {
+                "idLigne": 103131,
+                "vitesse": 0,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "JACKSON @GRAGG",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10014,
+            "vehiculeLoad": "12%",
+            "type": "Bus",
+            "numeroEquipement": "21704"
+        },
+        {
+            "localisation": {
+                "lat": 35.232101096378116,
+                "lng": -89.95473931511178,
+                "cap": 98
+            },
+            "conduite": {
+                "idLigne": 103150,
+                "vitesse": 17,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "8 min late",
+                "arretSuiv": {
+                    "nomCommercial": "FRAYSER RD @REDCOAT",
+                    "estimationTemps": 3
+                }
+            },
+            "id": 10018,
+            "vehiculeLoad": "2%",
+            "type": "Bus",
+            "numeroEquipement": "21710"
+        },
+        {
+            "localisation": {
+                "lat": 35.16486116220976,
+                "lng": -90.01038764133592,
+                "cap": 182
+            },
+            "conduite": {
+                "idLigne": 103133,
+                "vitesse": 0,
+                "destination": "AIRWAYS TRANSIT",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "WATKINS @HENRY",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10026,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "21708"
+        },
+        {
+            "localisation": {
+                "lat": 35.07974059604312,
+                "lng": -90.01908007744092,
+                "cap": 10
+            },
+            "conduite": {
+                "idLigne": 103133,
+                "vitesse": 15,
+                "destination": "FRAYSER at WOODROW",
+                "avanceRetard": "2 min late",
+                "arretSuiv": {
+                    "nomCommercial": "ELVIS PRESLEY @WHITMORE",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10035,
+            "vehiculeLoad": "14%",
+            "type": "Bus",
+            "numeroEquipement": "21801"
+        },
+        {
+            "localisation": {
+                "lat": 35.173039512878034,
+                "lng": -90.00693144540392,
+                "cap": 274
+            },
+            "conduite": {
+                "idLigne": 103139,
+                "vitesse": 14,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "CHELSEA @WATKINS",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10044,
+            "vehiculeLoad": "10%",
+            "type": "Bus",
+            "numeroEquipement": "21807"
+        },
+        {
+            "localisation": {
+                "lat": 35.217275863743296,
+                "lng": -89.99208837096005,
+                "cap": 271
+            },
+            "conduite": {
+                "idLigne": 103137,
+                "vitesse": 0,
+                "destination": "AIRWAYS TRANSIT",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "FRAYSER PLAZA",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 8014,
+            "vehiculeLoad": "2%",
+            "type": "Bus",
+            "numeroEquipement": "21713"
+        },
+        {
+            "localisation": {
+                "lat": 35.04132624192179,
+                "lng": -89.91278717715711,
+                "cap": 240
+            },
+            "conduite": {
+                "idLigne": 103129,
+                "vitesse": 13,
+                "destination": "AIRWAYS TRANSIT",
+                "avanceRetard": "4 min late",
+                "arretSuiv": {
+                    "nomCommercial": "RAINESatDELP",
+                    "estimationTemps": 1
+                }
+            },
+            "id": 30033,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "22209"
+        },
+        {
+            "localisation": {
+                "lat": 35.04459170850712,
+                "lng": -89.9824014318706,
+                "cap": 98
+            },
+            "conduite": {
+                "idLigne": 103147,
+                "vitesse": 0,
+                "destination": "MEMPHIS INTERNA",
+                "avanceRetard": "14 min late",
+                "arretSuiv": {
+                    "nomCommercial": "MEMPHIS INTERNA",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 30034,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "22021"
+        },
+        {
+            "localisation": {
+                "lat": 35.050614038872936,
+                "lng": -89.81670920668893,
+                "cap": 253
+            },
+            "conduite": {
+                "idLigne": 103136,
+                "vitesse": 9,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "3 min late",
+                "arretSuiv": {
+                    "nomCommercial": "WINCHESTER @QUINCE",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10069,
+            "vehiculeLoad": "8%",
+            "type": "Bus",
+            "numeroEquipement": "4024"
+        },
+        {
+            "localisation": {
+                "lat": 35.031751654802804,
+                "lng": -90.07675607893529,
+                "cap": 39
+            },
+            "conduite": {
+                "idLigne": 103134,
+                "vitesse": 0,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "3 min late",
+                "arretSuiv": {
+                    "nomCommercial": "THIRD @WESTERN PARK",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10073,
+            "vehiculeLoad": "2%",
+            "type": "Bus",
+            "numeroEquipement": "442"
+        },
+        {
+            "localisation": {
+                "lat": 35.10770928999093,
+                "lng": -89.94069467168595,
+                "cap": 91
+            },
+            "conduite": {
+                "idLigne": 103139,
+                "vitesse": 11,
+                "destination": "AMERICAN WAY TR",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "PARK @ECHLES",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10077,
+            "vehiculeLoad": "6%",
+            "type": "Bus",
+            "numeroEquipement": "446"
+        },
+        {
+            "localisation": {
+                "lat": 35.07253001740722,
+                "lng": -89.90565103699292,
+                "cap": 172
+            },
+            "conduite": {
+                "idLigne": 103136,
+                "vitesse": 10,
+                "destination": "CENTENNIAL DR @ HACKS CROSS RD",
+                "avanceRetard": "5 min late",
+                "arretSuiv": {
+                    "nomCommercial": "PERKINS @COTTONWOOD",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10083,
+            "vehiculeLoad": "10%",
+            "type": "Bus",
+            "numeroEquipement": "449"
+        },
+        {
+            "localisation": {
+                "lat": 35.02112308925811,
+                "lng": -90.00459462044262,
+                "cap": 270
+            },
+            "conduite": {
+                "idLigne": 103133,
+                "vitesse": 16,
+                "destination": "AIRWAYS TRANSIT",
+                "avanceRetard": "6 min late",
+                "arretSuiv": {
+                    "nomCommercial": "SHELBY DR @MILLBRANCH RD",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10109,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "454"
+        },
+        {
+            "localisation": {
+                "lat": 35.10184627990415,
+                "lng": -89.87904412706622,
+                "cap": 115
+            },
+            "conduite": {
+                "idLigne": 103145,
+                "vitesse": 17,
+                "destination": "PRIMACY PKWY @ RIDGEWAY RD",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "PARK @WEST CRESTWOOD",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10110,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "455"
+        },
+        {
+            "localisation": {
+                "lat": 35.14591857412115,
+                "lng": -90.03512521364829,
+                "cap": 109
+            },
+            "conduite": {
+                "idLigne": 103132,
+                "vitesse": 0,
+                "destination": "EXETER RD @ POPLAR AVE",
+                "avanceRetard": "6 min late",
+                "arretSuiv": {
+                    "nomCommercial": "POPLAR @DUNLAP",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 10125,
+            "vehiculeLoad": "28%",
+            "type": "Bus",
+            "numeroEquipement": "460"
+        },
+        {
+            "localisation": {
+                "lat": 35.06225363271889,
+                "lng": -89.99248985226076,
+                "cap": 96
+            },
+            "conduite": {
+                "idLigne": 103137,
+                "vitesse": 0,
+                "destination": "FRAYSER PLAZA",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "AIRWAYS BLVD @BROOKS",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26026,
+            "vehiculeLoad": "2%",
+            "type": "Bus",
+            "numeroEquipement": "20904"
+        },
+        {
+            "localisation": {
+                "lat": 35.091583278271834,
+                "lng": -89.98739426141454,
+                "cap": 272
+            },
+            "conduite": {
+                "idLigne": 103141,
+                "vitesse": 2,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "4 min late",
+                "arretSuiv": {
+                    "nomCommercial": "DUNN @CUSTER",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26027,
+            "vehiculeLoad": "2%",
+            "type": "Bus",
+            "numeroEquipement": "20903"
+        },
+        {
+            "localisation": {
+                "lat": 35.15623416637803,
+                "lng": -90.0478560126014,
+                "cap": 22
+            },
+            "conduite": {
+                "idLigne": 103138,
+                "vitesse": 0,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "7 min late",
+                "arretSuiv": null
+            },
+            "id": 26028,
+            "vehiculeLoad": "4%",
+            "type": "Bus",
+            "numeroEquipement": "20902"
+        },
+        {
+            "localisation": {
+                "lat": 35.13523030249848,
+                "lng": -90.04985315262097,
+                "cap": 97
+            },
+            "conduite": {
+                "idLigne": 103141,
+                "vitesse": 6,
+                "destination": "AIRWAYS TRANSIT",
+                "avanceRetard": "3 min late",
+                "arretSuiv": {
+                    "nomCommercial": "VANCE @DANNYTHOMAS",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26029,
+            "vehiculeLoad": "10%",
+            "type": "Bus",
+            "numeroEquipement": "20901"
+        },
+        {
+            "localisation": {
+                "lat": 35.019153075893854,
+                "lng": -89.84859764273781,
+                "cap": 359
+            },
+            "conduite": {
+                "idLigne": 103140,
+                "vitesse": 0,
+                "destination": "AMERICAN WAY TR",
+                "avanceRetard": "3 min early",
+                "arretSuiv": {
+                    "nomCommercial": "CRUMPLER RD @SHELBY DR",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26030,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "20815"
+        },
+        {
+            "localisation": {
+                "lat": 35.14397020763153,
+                "lng": -90.03586210473921,
+                "cap": 107
+            },
+            "conduite": {
+                "idLigne": 103142,
+                "vitesse": 10,
+                "destination": "CENTRAL AVE @ U-M CROSSWALK",
+                "avanceRetard": "7 min late",
+                "arretSuiv": {
+                    "nomCommercial": "ADAMS @MANASSAS",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26035,
+            "vehiculeLoad": "18%",
+            "type": "Bus",
+            "numeroEquipement": "20810"
+        },
+        {
+            "localisation": {
+                "lat": 35.199254746240456,
+                "lng": -89.94548121543204,
+                "cap": 271
+            },
+            "conduite": {
+                "idLigne": 103138,
+                "vitesse": 1,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "JAMES @WALNUT",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26036,
+            "vehiculeLoad": "8%",
+            "type": "Bus",
+            "numeroEquipement": "20809"
+        },
+        {
+            "localisation": {
+                "lat": 35.13797829846803,
+                "lng": -90.0286907760013,
+                "cap": 99
+            },
+            "conduite": {
+                "idLigne": 103143,
+                "vitesse": 0,
+                "destination": "WALNUT @ RACINE",
+                "avanceRetard": "3 min late",
+                "arretSuiv": {
+                    "nomCommercial": "UNION AVE @PASADENA PL",
+                    "estimationTemps": 1
+                }
+            },
+            "id": 26037,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "20808"
+        },
+        {
+            "localisation": {
+                "lat": 35.12996264660106,
+                "lng": -90.05478908846473,
+                "cap": 181
+            },
+            "conduite": {
+                "idLigne": 103134,
+                "vitesse": 15,
+                "destination": "JONETTA ST @ HOLMES RD",
+                "avanceRetard": "4 min late",
+                "arretSuiv": {
+                    "nomCommercial": "THIRD @EGEORGIA",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26040,
+            "vehiculeLoad": "16%",
+            "type": "Bus",
+            "numeroEquipement": "20905"
+        },
+        {
+            "localisation": {
+                "lat": 35.15190606905211,
+                "lng": -90.01999127318494,
+                "cap": 186
+            },
+            "conduite": {
+                "idLigne": 103130,
+                "vitesse": 19,
+                "destination": "SWTCC",
+                "avanceRetard": "8 min late",
+                "arretSuiv": {
+                    "nomCommercial": "BELLEVUE @OVERTON PARK",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26041,
+            "vehiculeLoad": "36%",
+            "type": "Bus",
+            "numeroEquipement": "20805"
+        },
+        {
+            "localisation": {
+                "lat": 35.108404985394834,
+                "lng": -89.94597824761179,
+                "cap": 4
+            },
+            "conduite": {
+                "idLigne": 103139,
+                "vitesse": 7,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "2 min late",
+                "arretSuiv": {
+                    "nomCommercial": "HIGHLAND @SPOTTSWOOD",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 26043,
+            "vehiculeLoad": "18%",
+            "type": "Bus",
+            "numeroEquipement": "20803"
+        },
+        {
+            "localisation": {
+                "lat": 35.1189024435738,
+                "lng": -89.98435898528741,
+                "cap": 359
+            },
+            "conduite": {
+                "idLigne": 103142,
+                "vitesse": 9,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "YOUNG @E PARKWAY",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 25027,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "22305"
+        },
+        {
+            "localisation": {
+                "lat": 35.13268697749794,
+                "lng": -90.05072271628762,
+                "cap": 271
+            },
+            "conduite": {
+                "idLigne": 103145,
+                "vitesse": 7,
+                "destination": "WILLIAM HUDSON ",
+                "avanceRetard": "3 min late",
+                "arretSuiv": {
+                    "nomCommercial": "GEPATTERSON @THIRD",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 25029,
+            "vehiculeLoad": "42%",
+            "type": "Bus",
+            "numeroEquipement": "22301"
+        },
+        {
+            "localisation": {
+                "lat": 35.00607451207115,
+                "lng": -89.89108090791105,
+                "cap": 271
+            },
+            "conduite": {
+                "idLigne": 103146,
+                "vitesse": 12,
+                "destination": "AIRWAYS TRANSIT",
+                "avanceRetard": "3 min late",
+                "arretSuiv": {
+                    "nomCommercial": "HOLMES atPLEASANT HILL",
+                    "estimationTemps": 2
+                }
+            },
+            "id": 25030,
+            "vehiculeLoad": "0%",
+            "type": "Bus",
+            "numeroEquipement": "22302"
+        },
+        {
+            "localisation": {
+                "lat": 35.076745479758024,
+                "lng": -89.94097209606578,
+                "cap": 92
+            },
+            "conduite": {
+                "idLigne": 103146,
+                "vitesse": 10,
+                "destination": "RIVERDAL @ WINCH",
+                "avanceRetard": "7 min early",
+                "arretSuiv": {
+                    "nomCommercial": "AMERICAN WAY TR",
+                    "estimationTemps": 2
+                }
+            },
+            "id": 25031,
+            "vehiculeLoad": "8%",
+            "type": "Bus",
+            "numeroEquipement": "22303"
+        },
+        {
+            "localisation": {
+                "lat": 35.21129763548816,
+                "lng": -90.03227313714486,
+                "cap": 10
+            },
+            "conduite": {
+                "idLigne": 103150,
+                "vitesse": 10,
+                "destination": "YALE RD @ AUSTIN PEAY HW",
+                "avanceRetard": "on time",
+                "arretSuiv": {
+                    "nomCommercial": "THOMAS @CINDY",
+                    "estimationTemps": 0
+                }
+            },
+            "id": 23023,
+            "vehiculeLoad": "20%",
+            "type": "Bus",
+            "numeroEquipement": "4014"
+        }
+    ]
+}

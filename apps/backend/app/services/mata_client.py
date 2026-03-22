@@ -1,5 +1,3 @@
-
-
 import json
 import logging
 import os
@@ -9,12 +7,11 @@ from typing import Any
 
 import requests
 
-# Memphis, TN timezone (Central Time)
 MEMPHIS_TZ = ZoneInfo("America/Chicago")
 
 logger = logging.getLogger(__name__)
 
-# Default request timeout (seconds)
+
 DEFAULT_TIMEOUT = 10
 
 
