@@ -175,6 +175,16 @@ class GTFSService:
         rid = self._headsign_to_route_id.get(destination.strip().upper())
         return self._routes.get(rid) if rid else None
 
+    def get_route_by_id(self, route_id: str) -> dict | None:
+        # Try exact match first, then zero-padded variants
+        for candidate in (route_id, route_id.lstrip("0") or route_id, route_id.zfill(2)):
+            if candidate in self._routes:
+                return self._routes[candidate]
+        return None
+
+    def get_route_shape_id(self, route_id: str) -> str | None:
+        return self._route_to_shape.get(route_id)
+
     def get_stops(self):
         return sorted(self._stops.values(), key=lambda s: s["name"])
 

@@ -1,0 +1,402 @@
+{
+  "_meta": {
+    "note": "Static mock mirroring the SWIV MATA API (swiv.mata.cadavl.com) response format.",
+    "service_note": "MATA service ends at 9:00 PM. Buses shown are mid-evening runs still active at ~8:30 PM.",
+    "generated_for": "Memphis Area Transit Authority (MATA) — Memphis, TN",
+    "last_updated": "2026-03-21T20:30:00-05:00"
+  },
+  "vehicule": [
+    {
+      "id": 10001,
+      "numeroEquipement": "4017",
+      "type": "Bus",
+      "localisation": { "lat": 35.1852, "lng": -89.9754, "cap": 182 },
+      "conduite": {
+        "idLigne": 42,
+        "destination": "FRAYSER at WOODROW",
+        "vitesse": 21,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "NORTH HOLLYWOOD STREET at SHA AVENUE", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10002,
+      "numeroEquipement": "4022",
+      "type": "Bus",
+      "localisation": { "lat": 35.0978, "lng": -89.9835, "cap": 180 },
+      "conduite": {
+        "idLigne": 42,
+        "destination": "AIRWAYS TRANSIT",
+        "vitesse": 17,
+        "avanceRetard": "3 minutes late",
+        "arretSuiv": { "nomCommercial": "AIRWAYS TRANSIT CENTER", "estimationTemps": 6 }
+      },
+      "vehiculeLoad": "HIGH"
+    },
+    {
+      "id": 10003,
+      "numeroEquipement": "4011",
+      "type": "Bus",
+      "localisation": { "lat": 35.1478, "lng": -90.0012, "cap": 90 },
+      "conduite": {
+        "idLigne": 50,
+        "destination": "EXETER RD @ POPLAR AVE",
+        "vitesse": 26,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "LAMAR AVENUE at SNOWDEN CIRCLE", "estimationTemps": 3 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10004,
+      "numeroEquipement": "4009",
+      "type": "Bus",
+      "localisation": { "lat": 35.1481, "lng": -89.9622, "cap": 270 },
+      "conduite": {
+        "idLigne": 50,
+        "destination": "WILLIAM HUDSON ",
+        "vitesse": 29,
+        "avanceRetard": "2 minutes early",
+        "arretSuiv": { "nomCommercial": "FRONT STREET at POPLAR AVENUE", "estimationTemps": 8 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10005,
+      "numeroEquipement": "4003",
+      "type": "Bus",
+      "localisation": { "lat": 35.1628, "lng": -89.9571, "cap": 45 },
+      "conduite": {
+        "idLigne": 52,
+        "destination": "METHODIST HOSPI",
+        "vitesse": 19,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "JACKSON AVENUE at MACON ROAD", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10006,
+      "numeroEquipement": "4015",
+      "type": "Bus",
+      "localisation": { "lat": 35.1712, "lng": -89.9424, "cap": 45 },
+      "conduite": {
+        "idLigne": 53,
+        "destination": "SWTCC",
+        "vitesse": 24,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "SYCAMORE VIEW ROAD at SUMMER AVENUE", "estimationTemps": 4 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10007,
+      "numeroEquipement": "4028",
+      "type": "Bus",
+      "localisation": { "lat": 35.2098, "lng": -89.9944, "cap": 180 },
+      "conduite": {
+        "idLigne": 11,
+        "destination": "YALE RD @ AUSTIN PEAY HW",
+        "vitesse": 14,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "FRAYSER PLAZA", "estimationTemps": 3 }
+      },
+      "vehiculeLoad": "HIGH"
+    },
+    {
+      "id": 10008,
+      "numeroEquipement": "4006",
+      "type": "Bus",
+      "localisation": { "lat": 35.1092, "lng": -90.0185, "cap": 135 },
+      "conduite": {
+        "idLigne": 36,
+        "destination": "CENTENNIAL DR @ HACKS CROSS RD",
+        "vitesse": 23,
+        "avanceRetard": "1 minute late",
+        "arretSuiv": { "nomCommercial": "LAMAR AVENUE at PENDLETON STREET", "estimationTemps": 3 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10009,
+      "numeroEquipement": "4019",
+      "type": "Bus",
+      "localisation": { "lat": 35.1388, "lng": -90.0522, "cap": 270 },
+      "conduite": {
+        "idLigne": 40,
+        "destination": "WILLIAM HUDSON ",
+        "vitesse": 18,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "WILLIAM HUDSON TRANSIT CENTER", "estimationTemps": 5 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10010,
+      "numeroEquipement": "4024",
+      "type": "Bus",
+      "localisation": { "lat": 35.1566, "lng": -90.0478, "cap": 90 },
+      "conduite": {
+        "idLigne": 40,
+        "destination": "FLETCHER TRACE @ STAGE RD",
+        "vitesse": 22,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "GE PATTERSON AVENUE at MAIN STREET", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10011,
+      "numeroEquipement": "4013",
+      "type": "Bus",
+      "localisation": { "lat": 35.0312, "lng": -90.0694, "cap": 0 },
+      "conduite": {
+        "idLigne": 39,
+        "destination": "JONETTA ST @ HOLMES RD",
+        "vitesse": 16,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "HORN LAKE ROAD at RAINES ROAD", "estimationTemps": 4 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10012,
+      "numeroEquipement": "4007",
+      "type": "Bus",
+      "localisation": { "lat": 35.1732, "lng": -89.9512, "cap": 270 },
+      "conduite": {
+        "idLigne": 8,
+        "destination": "AMERICAN WAY TR",
+        "vitesse": 20,
+        "avanceRetard": "2 minutes late",
+        "arretSuiv": { "nomCommercial": "CHELSEA AVENUE at HOLMES STREET", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10013,
+      "numeroEquipement": "4021",
+      "type": "Bus",
+      "localisation": { "lat": 35.0622, "lng": -89.9934, "cap": 270 },
+      "conduite": {
+        "idLigne": 28,
+        "destination": "WILLIAM HUDSON ",
+        "vitesse": 31,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "AIRWAYS TRANSIT CENTER", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "HIGH"
+    },
+    {
+      "id": 10014,
+      "numeroEquipement": "4025",
+      "type": "Bus",
+      "localisation": { "lat": 35.0842, "lng": -90.0082, "cap": 315 },
+      "conduite": {
+        "idLigne": 28,
+        "destination": "MEMPHIS INTERNA",
+        "vitesse": 27,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "NONCONNAH BOULEVARD at CORPORATE AVENUE", "estimationTemps": 4 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10015,
+      "numeroEquipement": "4004",
+      "type": "Bus",
+      "localisation": { "lat": 35.1649, "lng": -90.0123, "cap": 270 },
+      "conduite": {
+        "idLigne": 19,
+        "destination": "WOLFCHASE GALLE",
+        "vitesse": 19,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "VOLLINTINE AVENUE at SPEED STREET", "estimationTemps": 3 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10016,
+      "numeroEquipement": "4016",
+      "type": "Bus",
+      "localisation": { "lat": 35.1562, "lng": -90.0447, "cap": 0 },
+      "conduite": {
+        "idLigne": 13,
+        "destination": "ALICE AVE @ BENTON ST",
+        "vitesse": 15,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "WILLIAM HUDSON TRANSIT CENTER", "estimationTemps": 1 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10017,
+      "numeroEquipement": "4008",
+      "type": "Bus",
+      "localisation": { "lat": 35.0867, "lng": -90.0621, "cap": 180 },
+      "conduite": {
+        "idLigne": 12,
+        "destination": "AIRWAYS TRANSIT",
+        "vitesse": 18,
+        "avanceRetard": "4 minutes late",
+        "arretSuiv": { "nomCommercial": "MALLORY AVENUE at FLORIDA STREET", "estimationTemps": 5 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10018,
+      "numeroEquipement": "4012",
+      "type": "Bus",
+      "localisation": { "lat": 35.1077, "lng": -89.9356, "cap": 90 },
+      "conduite": {
+        "idLigne": 57,
+        "destination": "PRIMACY PKWY @ RIDGEWAY RD",
+        "vitesse": 25,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "PARK AVENUE at GOODMAN STREET", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10019,
+      "numeroEquipement": "4020",
+      "type": "Bus",
+      "localisation": { "lat": 35.0682, "lng": -89.8954, "cap": 180 },
+      "conduite": {
+        "idLigne": 69,
+        "destination": "DOUBLE TREE @ PARKROSE RD",
+        "vitesse": 22,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "EXCEL CENTER", "estimationTemps": 4 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10020,
+      "numeroEquipement": "4014",
+      "type": "Bus",
+      "localisation": { "lat": 35.1124, "lng": -89.9461, "cap": 180 },
+      "conduite": {
+        "idLigne": 37,
+        "destination": "AMERICAN WAY TR",
+        "vitesse": 20,
+        "avanceRetard": "1 minute early",
+        "arretSuiv": { "nomCommercial": "HIGHLAND STREET at SPOTTSWOOD AVENUE", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10021,
+      "numeroEquipement": "4005",
+      "type": "Bus",
+      "localisation": { "lat": 35.1935, "lng": -89.9812, "cap": 225 },
+      "conduite": {
+        "idLigne": 32,
+        "destination": "FRAYSER PLAZA",
+        "vitesse": 17,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "NORTH HOLLYWOOD STREET at HUBBARD AVENUE", "estimationTemps": 3 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10022,
+      "numeroEquipement": "4018",
+      "type": "Bus",
+      "localisation": { "lat": 35.1258, "lng": -89.9824, "cap": 90 },
+      "conduite": {
+        "idLigne": 34,
+        "destination": "HUMPHREYS BLD @ WALNUT GROVE R",
+        "vitesse": 24,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "CENTRAL AVENUE at EARLY MAXWELL BLVD", "estimationTemps": 3 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10023,
+      "numeroEquipement": "4010",
+      "type": "Bus",
+      "localisation": { "lat": 35.0516, "lng": -89.9234, "cap": 0 },
+      "conduite": {
+        "idLigne": 16,
+        "destination": "AMERICAN WAY TR",
+        "vitesse": 16,
+        "avanceRetard": "2 minutes late",
+        "arretSuiv": { "nomCommercial": "GETWELL ROAD at CROWFARD DRIVE", "estimationTemps": 5 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10024,
+      "numeroEquipement": "4023",
+      "type": "Bus",
+      "localisation": { "lat": 35.1488, "lng": -90.0524, "cap": 135 },
+      "conduite": {
+        "idLigne": 1,
+        "destination": "WALNUT @ RACINE",
+        "vitesse": 21,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "FRONT STREET at ADAMS AVENUE", "estimationTemps": 2 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10025,
+      "numeroEquipement": "4026",
+      "type": "Bus",
+      "localisation": { "lat": 35.1503, "lng": -90.0461, "cap": 90 },
+      "conduite": {
+        "idLigne": 2,
+        "destination": "CENTRAL AVE @ U-M CROSSWALK",
+        "vitesse": 19,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "WILLIAM HUDSON TRANSIT CENTER", "estimationTemps": 4 }
+      },
+      "vehiculeLoad": "MEDIUM"
+    },
+    {
+      "id": 10026,
+      "numeroEquipement": "4027",
+      "type": "Bus",
+      "localisation": { "lat": 35.0053, "lng": -89.9213, "cap": 270 },
+      "conduite": {
+        "idLigne": 7,
+        "destination": "IRS",
+        "vitesse": 20,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "HOLMES ROAD at MALONE ROAD", "estimationTemps": 4 }
+      },
+      "vehiculeLoad": "LOW"
+    },
+    {
+      "id": 10027,
+      "numeroEquipement": "4002",
+      "type": "Bus",
+      "localisation": { "lat": 35.0764, "lng": -90.0985, "cap": 0 },
+      "conduite": {
+        "idLigne": 4,
+        "destination": "AIRWAYS TRANSIT",
+        "vitesse": 18,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "WEAVER ROAD at WEST MITCHELL ROAD", "estimationTemps": 5 }
+      },
+      "vehiculeLoad": "EMPTY"
+    },
+    {
+      "id": 10028,
+      "numeroEquipement": "4029",
+      "type": "Bus",
+      "localisation": { "lat": 35.0262, "lng": -90.1035, "cap": 0 },
+      "conduite": {
+        "idLigne": 30,
+        "destination": "RIVERDAL @ WINCH",
+        "vitesse": 23,
+        "avanceRetard": "On Time",
+        "arretSuiv": { "nomCommercial": "DOUBLE TREE STREET at PARKROSE ROAD", "estimationTemps": 4 }
+      },
+      "vehiculeLoad": "LOW"
+    }
+  ]
+}

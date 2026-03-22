@@ -1,6 +1,8 @@
 
 
+import json
 import logging
+import os
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from typing import Any
@@ -84,6 +86,21 @@ def fetch_vehicles(
     return [_parse_vehicle(v) for v in raw_vehicles]
 
 
+_MOCK_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "mock_vehicles.json")
+
+
+def _load_mock() -> list[dict[str, Any]]:
+    try:
+        with open(_MOCK_PATH) as f:
+            data = json.load(f)
+        raw_vehicles = data.get("vehicule") or []
+        logger.warning("Live API unavailable — serving %d vehicles from mock_vehicles.json", len(raw_vehicles))
+        return [_parse_vehicle(v) for v in raw_vehicles]
+    except Exception:
+        logger.exception("Failed to load mock_vehicles.json")
+        return []
+
+
 def fetch_vehicles_safe(
     base_url: str,
     path: str,
@@ -92,10 +109,14 @@ def fetch_vehicles_safe(
     timeout: float = DEFAULT_TIMEOUT,
 ) -> list[dict[str, Any]]:
     try:
-        return fetch_vehicles(base_url, path, lignes, timeout=timeout)
+        vehicles = fetch_vehicles(base_url, path, lignes, timeout=timeout)
+        if not vehicles:
+            logger.warning("Live API returned no vehicles — falling back to mock")
+            return _load_mock()
+        return vehicles
     except requests.RequestException as e:
         logger.exception("MATA API request failed: %s", e)
-        return []
+        return _load_mock()
     except (KeyError, TypeError, ValueError) as e:
         logger.exception("MATA API response parse error: %s", e)
-        return []
+        return _load_mock()
