@@ -63,46 +63,6 @@ function statusColor(status: string): string {
 const BUS_SVG_PATH =
   "M4 16c0 .88.39 1.67 1 2.22V20c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h8v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1c-.83 0-1.5-.67-1.5-1.5S6.67 14 7.5 14s1.5.67 1.5 1.5S8.33 17 7.5 17zm9 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zm1.5-6H6V6h12v5z";
 
-function busIconHtml(color: string, terminalStart?: string | null, terminalEnd?: string | null) {
-  const hasTerminals = terminalStart && terminalEnd;
-
-  const shorten = (name: string, max = 12) =>
-    name.length > max ? name.slice(0, max).trimEnd() + "…" : name;
-
-  return `
-    <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-      <div style="
-        width:30px;height:30px;border-radius:50%;
-        background:${color};
-        display:flex;align-items:center;justify-content:center;
-        border:2.5px solid #fff;
-        box-shadow:0 2px 8px rgba(0,0,0,0.35);
-        cursor:pointer;
-      ">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-          <path d="${BUS_SVG_PATH}"/>
-        </svg>
-      </div>
-      ${hasTerminals ? `
-        <div style="
-          background:rgba(255,255,255,0.96);
-          border:1px solid rgba(0,0,0,0.1);
-          border-radius:6px;
-          padding:2px 6px;
-          box-shadow:0 1px 4px rgba(0,0,0,0.18);
-          font-family:Inter,sans-serif;
-          font-size:9px;
-          white-space:nowrap;
-          line-height:1.4;
-          text-align:center;
-          min-width:70px;
-          max-width:130px;
-        ">
-          <div style="color:#16a34a;font-weight:700;overflow:hidden;text-overflow:ellipsis">▶ ${shorten(terminalStart)}</div>
-          <div style="color:#dc2626;font-weight:700;overflow:hidden;text-overflow:ellipsis">⏹ ${shorten(terminalEnd)}</div>
-        </div>` : ""}
-    </div>`;
-}
 
 function stopDotHtml(color: string) {
   return `
@@ -169,6 +129,7 @@ export default function MapView({
     if (mapRef.current || !mapContainerRef.current) return;
 
     import("leaflet").then((L) => {
+      if (mapRef.current || !mapContainerRef.current) return;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
@@ -177,7 +138,7 @@ export default function MapView({
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const map = L.map(mapContainerRef.current!, {
+      const map = L.map(mapContainerRef.current, {
         center: [35.1495, -90.049],
         zoom: 12,
         zoomControl: false,
