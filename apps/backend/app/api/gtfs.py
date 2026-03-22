@@ -1,12 +1,3 @@
-"""
-GTFS API endpoints.
-
-GET /api/stops          – all stops (for search dropdowns)
-GET /api/routes         – all routes
-GET /api/plan           – routes between two stops (?from_stop=X&to_stop=Y)
-GET /api/shapes/<id>    – GPS polyline for a shape_id
-"""
-
 from flask import Blueprint, jsonify, request
 
 from app.services.gtfs_service import gtfs

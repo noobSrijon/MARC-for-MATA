@@ -51,7 +51,6 @@ def _parse_vehicle(raw: dict[str, Any]) -> dict[str, Any]:
         "next_stop": arret_suiv.get("nomCommercial"),
         "eta_minutes": arret_suiv.get("estimationTemps"),
         "load": raw.get("vehiculeLoad"),
-        # Keep raw for consumers that need it
         "_raw": raw,
     }
 
@@ -64,8 +63,6 @@ def fetch_vehicles(
     timeout: float = DEFAULT_TIMEOUT,
 ) -> list[dict[str, Any]]:
 
-    if not base_url:
-        raise ValueError("MATA_API_BASE_URL is not configured")
     url = base_url.rstrip("/") + path
     now_central = datetime.now(MEMPHIS_TZ)
     params = {"_tmp": int(now_central.timestamp()), "lignes": lignes}
@@ -77,7 +74,6 @@ def fetch_vehicles(
     raw_vehicles = data.get("vehicule") or data.get("vehicules") or []
 
     if not isinstance(raw_vehicles, list):
-        logger.warning("MATA API returned unexpected vehicule format: %s", type(raw_vehicles))
         return []
 
     return [_parse_vehicle(v) for v in raw_vehicles]
@@ -91,10 +87,8 @@ def _load_mock() -> list[dict[str, Any]]:
         with open(_MOCK_PATH) as f:
             data = json.load(f)
         raw_vehicles = data.get("vehicule") or []
-        logger.warning("Live API unavailable — serving %d vehicles from mock_vehicles.json", len(raw_vehicles))
         return [_parse_vehicle(v) for v in raw_vehicles]
     except Exception:
-        logger.exception("Failed to load mock_vehicles.json")
         return []
 
 
@@ -108,12 +102,9 @@ def fetch_vehicles_safe(
     try:
         vehicles = fetch_vehicles(base_url, path, lignes, timeout=timeout)
         if not vehicles:
-            logger.warning("Live API returned no vehicles — falling back to mock")
             return _load_mock()
         return vehicles
     except requests.RequestException as e:
-        logger.exception("MATA API request failed: %s", e)
         return _load_mock()
     except (KeyError, TypeError, ValueError) as e:
-        logger.exception("MATA API response parse error: %s", e)
         return _load_mock()

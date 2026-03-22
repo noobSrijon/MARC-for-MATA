@@ -11,7 +11,6 @@ from pymongo import MongoClient
 
 logger = logging.getLogger(__name__)
 
-# Severity base scores per issue type (0–100)
 _ISSUE_BASE_SCORES = {
     "broken ramp": 90,
     "ramp broken": 90,
@@ -65,9 +64,9 @@ def _compute_severity(issue_type: str, description: str) -> int:
             score = int(parsed.get("score", 50))
             return max(0, min(100, score))
         except Exception as e:
-            logger.warning("AI severity scoring failed, using rule-based: %s", e)
+            logger.warning("AI severity scoring failed", e)
 
-    # Rule-based fallback
+    
     key = issue_type.lower().strip()
     base = 50
     for pattern, score in _ISSUE_BASE_SCORES.items():
@@ -75,7 +74,7 @@ def _compute_severity(issue_type: str, description: str) -> int:
             base = score
             break
 
-    # Boost score if description is detailed (more words = more serious context)
+
     word_count = len(description.split()) if description else 0
     boost = min(10, word_count // 5)
     return min(100, base + boost)
@@ -169,11 +168,6 @@ def reports():
 
 @bp.route("/<report_id>/vote", methods=["POST"])
 def vote_report(report_id):
-    """
-    POST /api/reports/<report_id>/vote
-    Body: {"vote": "like" | "dislike"}
-    Increments the like or dislike count on a report.
-    """
     db = _get_db()
     if db is None:
         return jsonify({"error": "Storage not configured"}), 503
@@ -214,10 +208,7 @@ def vote_report(report_id):
 
 @bp.route("/ai-note", methods=["GET"])
 def ai_note():
-    """
-    GET /api/reports/ai-note?route_short_name=X
-    Uses OpenRouter AI to summarize what reports say about accessibility for ramp users.
-    """
+ 
     route_short_name = request.args.get("route_short_name")
     if not route_short_name:
         return jsonify({"error": "route_short_name required"}), 400
@@ -359,12 +350,7 @@ def analyze_image():
 
 @bp.route("/upload-image", methods=["POST"])
 def upload_image():
-    """
-    POST /api/reports/upload-image
 
-    Accepts multipart form data with 'image' file field.
-    Stores image in MongoDB GridFS and returns the URL to fetch it.
-    """
     fs = _get_gridfs()
     if fs is None:
         return jsonify({"error": "Storage not configured"}), 503

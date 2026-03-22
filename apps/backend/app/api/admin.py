@@ -19,10 +19,7 @@ def _get_db():
 
 @bp.route("/reports", methods=["GET"])
 def get_all_reports():
-    """
-    GET /api/admin/reports
-    Returns all unresolved reports sorted by severityScore descending.
-    """
+
     db = _get_db()
     if db is None:
         return jsonify({"error": "Storage not configured"}), 503
@@ -46,15 +43,11 @@ def get_all_reports():
 
 @bp.route("/reports/<report_id>/resolve", methods=["POST", "DELETE"])
 def resolve_report(report_id):
-    """
-    POST /api/admin/reports/<report_id>/resolve
-    Marks a report as resolved (removes it from active reports).
-    """
+
     db = _get_db()
     if db is None:
         return jsonify({"error": "Storage not configured"}), 503
 
-    # Try custom string id first, then ObjectId
     doc = db.reports.find_one({"id": report_id})
     if not doc:
         try:
