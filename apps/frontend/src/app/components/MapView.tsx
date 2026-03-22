@@ -59,6 +59,7 @@ interface MapViewProps {
   selectedRouteId: string | null;
   onRouteSelect: (routeId: string) => void;
   onReportIssue: (bus: ReportBusInfo) => void;
+  userLocation?: { lat: number; lon: number } | null;
 }
 
 function statusColor(status: string): string {
@@ -124,6 +125,7 @@ export default function MapView({
   selectedRouteId,
   onRouteSelect,
   onReportIssue,
+  userLocation,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LMap | null>(null);
@@ -132,6 +134,7 @@ export default function MapView({
   const routeStopMarkersRef = useRef<CircleMarker[]>([]);
   const fromMarkerRef = useRef<CircleMarker | null>(null);
   const toMarkerRef = useRef<CircleMarker | null>(null);
+  const userLocationMarkerRef = useRef<Marker | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const vehiclesRef = useRef<Vehicle[]>([]);
   const onReportIssueRef = useRef(onReportIssue);
@@ -514,6 +517,28 @@ export default function MapView({
       }
     });
   }, [fromStop, toStop]);
+
+  // Draw user location dot
+  useEffect(() => {
+    if (!mapRef.current) return;
+    import("leaflet").then((L) => {
+      userLocationMarkerRef.current?.remove();
+      userLocationMarkerRef.current = null;
+      if (!userLocation) return;
+      const icon = L.divIcon({
+        className: "",
+        iconSize: [20, 20],
+        iconAnchor: [10, 10],
+        html: `<div style="width:20px;height:20px;position:relative;display:flex;align-items:center;justify-content:center;">
+          <div style="position:absolute;width:20px;height:20px;border-radius:50%;background:rgba(9,89,182,0.25);animation:pulse-ring 1.4s ease-out infinite;"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#0959b6;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+        </div>`,
+      });
+      userLocationMarkerRef.current = L.marker([userLocation.lat, userLocation.lon], { icon })
+        .addTo(mapRef.current!)
+        .bindTooltip("Your location", { direction: "top", offset: [0, -10] });
+    });
+  }, [userLocation]);
 
   const handleCenter = useCallback(() => mapRef.current?.setView([35.1495, -90.049], 12), []);
   const handleZoomIn = useCallback(() => mapRef.current?.zoomIn(), []);

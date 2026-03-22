@@ -1,5 +1,7 @@
+from __future__ import annotations
 import csv
 import logging
+import math
 import os
 from collections import defaultdict
 from datetime import datetime
@@ -308,6 +310,74 @@ class GTFSService:
             return {"type": "transfer", "direct": [], "transfers": transfers}
 
         return {"type": "none", "message": "No routes found between these stops.", "direct": [], "transfers": []}
+
+    def _haversine_m(self, lat1, lon1, lat2, lon2):
+        R = 6_371_000
+        p1, p2 = math.radians(lat1), math.radians(lat2)
+        dp = math.radians(lat2 - lat1)
+        dl = math.radians(lon2 - lon1)
+        a = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+        return R * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+
+    def _nearby_stops(self, lat, lon, max_m=800):
+        results = []
+        for stop in self._stops.values():
+            d = self._haversine_m(lat, lon, stop["lat"], stop["lon"])
+            if d <= max_m:
+                results.append((stop, d))
+        results.sort(key=lambda x: x[1])
+        return results
+
+    def plan_trip_walk(self, from_lat, from_lon, to_lat, to_lon, max_walk_m=800):
+        """Find a route between two coordinates, allowing walking to/from nearby stops."""
+        active = self._active_service_ids()
+
+        from_candidates = self._nearby_stops(from_lat, from_lon, max_walk_m)[:8]
+        to_candidates = self._nearby_stops(to_lat, to_lon, max_walk_m)[:8]
+
+        if not from_candidates or not to_candidates:
+            return {"type": "none", "message": "No bus stops within walking distance.", "direct": [], "transfers": []}
+
+        WALK_SPEED_MPS = 1.3  # ~5 km/h
+
+        def make_walk(stop, dist):
+            return {
+                "stop": stop,
+                "distance_m": round(dist),
+                "minutes": max(1, round(dist / WALK_SPEED_MPS / 60)),
+            }
+
+        # Pass 1: prefer direct routes (fewest transfers)
+        for from_stop, from_dist in from_candidates:
+            for to_stop, to_dist in to_candidates:
+                if from_stop["id"] == to_stop["id"]:
+                    continue
+                direct = self._find_direct(from_stop["id"], to_stop["id"], active)
+                if direct:
+                    return {
+                        "type": "direct",
+                        "direct": direct,
+                        "transfers": [],
+                        "from_walk": make_walk(from_stop, from_dist),
+                        "to_walk": make_walk(to_stop, to_dist),
+                    }
+
+        # Pass 2: allow one transfer
+        for from_stop, from_dist in from_candidates:
+            for to_stop, to_dist in to_candidates:
+                if from_stop["id"] == to_stop["id"]:
+                    continue
+                transfers = self._find_transfers(from_stop["id"], to_stop["id"], active)
+                if transfers:
+                    return {
+                        "type": "transfer",
+                        "direct": [],
+                        "transfers": transfers,
+                        "from_walk": make_walk(from_stop, from_dist),
+                        "to_walk": make_walk(to_stop, to_dist),
+                    }
+
+        return {"type": "none", "message": "No routes found within walking distance.", "direct": [], "transfers": []}
 
     def _find_direct(self, from_stop_id, to_stop_id, active_services):
         from_ids = self._expand_stop_ids(from_stop_id)

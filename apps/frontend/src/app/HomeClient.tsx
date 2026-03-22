@@ -55,6 +55,7 @@ export default function HomeClient() {
   const [selectedRouteId, setSelectedRouteId] = useState<string | null>(null);
   const [reportBus, setReportBus] = useState<ReportBusInfo | null>(null);
   const [reports, setReports] = useState<IssueReport[]>([]);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
 
   // Flatten all routes from the plan result so MapView can draw shapes
   const allRoutes: Route[] = planResult
@@ -95,6 +96,7 @@ export default function HomeClient() {
           selectedRouteId={selectedRouteId}
           onRouteSelect={handleRouteSelect}
           onReportIssue={handleReportIssue}
+          userLocation={userLocation}
         />
         <Sidebar
           onFromStop={setFromStop}
@@ -103,6 +105,7 @@ export default function HomeClient() {
           onRouteSelect={handleRouteSelect}
           selectedRouteId={selectedRouteId}
           planResult={planResult}
+          onUserLocation={setUserLocation}
         />
       </main>
       <BottomNav />

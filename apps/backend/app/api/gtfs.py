@@ -33,6 +33,22 @@ def plan_trip():
     return jsonify(gtfs.plan_trip(from_stop, to_stop))
 
 
+@bp.route("/plan/walk", methods=["GET"])
+def plan_trip_walk():
+    """Route between two coordinates, walking to/from nearby stops.
+    ?from_lat=35.15&from_lon=-90.05&to_lat=35.12&to_lon=-90.03
+    """
+    try:
+        from_lat = float(request.args.get("from_lat", ""))
+        from_lon = float(request.args.get("from_lon", ""))
+        to_lat = float(request.args.get("to_lat", ""))
+        to_lon = float(request.args.get("to_lon", ""))
+    except (TypeError, ValueError):
+        return jsonify({"error": "from_lat, from_lon, to_lat, to_lon are required floats"}), 400
+
+    return jsonify(gtfs.plan_trip_walk(from_lat, from_lon, to_lat, to_lon))
+
+
 @bp.route("/shapes/<path:shape_id>", methods=["GET"])
 def get_shape(shape_id: str):
     points = gtfs.get_shape(shape_id)

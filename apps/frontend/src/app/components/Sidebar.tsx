@@ -4,6 +4,34 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001";
 
+function haversineMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371e3;
+  const φ1 = (lat1 * Math.PI) / 180, φ2 = (lat2 * Math.PI) / 180;
+  const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+  const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+  const a = Math.sin(Δφ / 2) ** 2 + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function nearestStop(lat: number, lon: number, stops: Stop[]): Stop | null {
+  let best: Stop | null = null, bestDist = Infinity;
+  for (const s of stops) {
+    const d = haversineMeters(lat, lon, s.lat, s.lon);
+    if (d < bestDist) { bestDist = d; best = s; }
+  }
+  return best;
+}
+
+async function geocodePlace(query: string): Promise<{ lat: number; lon: number } | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1&countrycodes=us&viewbox=-90.3,34.9,-89.7,35.35`;
+    const res = await fetch(url, { headers: { "Accept-Language": "en" } });
+    const data = await res.json();
+    if (!data.length) return null;
+    return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+  } catch { return null; }
+}
+
 interface Vehicle {
   id: number;
   route_short_name: string | null;
@@ -32,11 +60,19 @@ interface TransferOption {
   leg2: Route;
 }
 
+interface WalkLeg {
+  stop: Stop;
+  distance_m: number;
+  minutes: number;
+}
+
 interface PlanResult {
   type: "direct" | "transfer" | "wrong_direction" | "none";
   message?: string;
   direct: Route[];
   transfers: TransferOption[];
+  from_walk?: WalkLeg;
+  to_walk?: WalkLeg;
 }
 
 interface Report {
@@ -61,6 +97,7 @@ interface SidebarProps {
   onRouteSelect: (routeId: string) => void;
   selectedRouteId: string | null;
   planResult: PlanResult | null;
+  onUserLocation?: (loc: { lat: number; lon: number } | null) => void;
 }
 
 function formatTimeAgo(timestamp: number): string {
@@ -94,17 +131,25 @@ function StopSearch({
   allStops,
   value,
   onChange,
+  showLocationButton,
+  onLocationFound,
 }: {
   label: string;
   placeholder: string;
   allStops: Stop[];
   value: Stop | null;
   onChange: (stop: Stop | null) => void;
+  showLocationButton?: boolean;
+  onLocationFound?: (loc: { lat: number; lon: number }) => void;
 }) {
   const [query, setQuery] = useState(value?.name ?? "");
   const [open, setOpen] = useState(false);
   const [filtered, setFiltered] = useState<Stop[]>([]);
+  const [locating, setLocating] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
+  const [geoSuggestion, setGeoSuggestion] = useState<{ stop: Stop; label: string } | null>(null);
   const ref = useRef<HTMLDivElement>(null);
+  const geoTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     setQuery(value ? value.name : "");
@@ -112,6 +157,9 @@ function StopSearch({
 
   useEffect(() => {
     const q = query.trim().toLowerCase();
+    setGeoSuggestion(null);
+    if (geoTimerRef.current) clearTimeout(geoTimerRef.current);
+
     if (!q || (value && value.name === query)) {
       setFiltered([]);
       setOpen(false);
@@ -120,6 +168,23 @@ function StopSearch({
     const results = allStops.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 50);
     setFiltered(results);
     setOpen(results.length > 0);
+
+    // If few stop matches, try geocoding after debounce
+    if (results.length < 3 && allStops.length > 0) {
+      geoTimerRef.current = setTimeout(async () => {
+        setGeocoding(true);
+        const coords = await geocodePlace(query.trim());
+        setGeocoding(false);
+        if (coords) {
+          const nearest = nearestStop(coords.lat, coords.lon, allStops);
+          if (nearest) {
+            setGeoSuggestion({ stop: nearest, label: query.trim() });
+            setOpen(true);
+          }
+        }
+      }, 800);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, allStops, value]);
 
   useEffect(() => {
@@ -135,13 +200,33 @@ function StopSearch({
     setQuery(stop.name);
     setOpen(false);
     setFiltered([]);
+    setGeoSuggestion(null);
   }
 
   function clear() {
     onChange(null);
     setQuery("");
     setFiltered([]);
+    setGeoSuggestion(null);
     setOpen(false);
+  }
+
+  function handleUseMyLocation() {
+    if (!navigator.geolocation) return;
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const { latitude, longitude } = pos.coords;
+        const stop = nearestStop(latitude, longitude, allStops);
+        setLocating(false);
+        if (stop) {
+          select(stop);
+          onLocationFound?.({ lat: latitude, lon: longitude });
+        }
+      },
+      () => setLocating(false),
+      { timeout: 10000 }
+    );
   }
 
   return (
@@ -149,23 +234,57 @@ function StopSearch({
       <p className="text-[8px] font-bold uppercase tracking-widest text-on-surface-variant/50 mb-0.5">
         {label}
       </p>
-      <div className="relative flex items-center">
-        <input
-          className="w-full text-xs bg-surface-container-low rounded-md px-2 py-1.5 pr-6 outline-none placeholder:text-on-surface-variant/40 text-on-surface font-medium focus:ring-1 focus:ring-primary"
-          placeholder={placeholder}
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={() => { if (filtered.length > 0) setOpen(true); }}
-        />
-        {value && (
-          <button onClick={clear} className="absolute right-1.5 text-on-surface-variant/50 hover:text-on-surface">
-            <span className="material-symbols-outlined text-[14px]">close</span>
+      <div className="flex items-center gap-1">
+        <div className="relative flex-1">
+          <input
+            className="w-full text-xs bg-surface-container-low rounded-md px-2 py-1.5 pr-6 outline-none placeholder:text-on-surface-variant/40 text-on-surface font-medium focus:ring-1 focus:ring-primary"
+            placeholder={placeholder}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => { if (filtered.length > 0 || geoSuggestion) setOpen(true); }}
+          />
+          {geocoding && !value && (
+            <span className="absolute right-1.5 top-1/2 -translate-y-1/2 material-symbols-outlined text-[14px] animate-spin text-on-surface-variant/40">
+              progress_activity
+            </span>
+          )}
+          {value && (
+            <button onClick={clear} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-on-surface-variant/50 hover:text-on-surface">
+              <span className="material-symbols-outlined text-[14px]">close</span>
+            </button>
+          )}
+        </div>
+        {showLocationButton && !value && (
+          <button
+            onClick={handleUseMyLocation}
+            disabled={locating}
+            className="shrink-0 p-1 rounded-md hover:bg-primary/10 text-primary disabled:opacity-40 transition-colors"
+            title="Use my location"
+          >
+            {locating ? (
+              <span className="material-symbols-outlined text-[16px] animate-spin">progress_activity</span>
+            ) : (
+              <span className="material-symbols-outlined text-[16px]">my_location</span>
+            )}
           </button>
         )}
       </div>
 
-      {open && (
+      {open && (filtered.length > 0 || geoSuggestion) && (
         <div className="absolute z-50 left-0 right-0 mt-1 bg-white rounded-xl shadow-lg border border-surface-container max-h-48 overflow-y-auto">
+          {geoSuggestion && (
+            <button
+              key="__geo__"
+              className="w-full text-left px-3 py-2 text-xs text-primary hover:bg-primary/10 transition-colors border-b border-surface-container/50"
+              onMouseDown={() => select(geoSuggestion.stop)}
+            >
+              <div className="flex items-center gap-1 mb-0.5">
+                <span className="material-symbols-outlined text-[12px]">location_on</span>
+                <span className="font-semibold truncate">Nearest stop to &quot;{geoSuggestion.label}&quot;</span>
+              </div>
+              <span className="text-on-surface-variant text-[10px]">{geoSuggestion.stop.name}</span>
+            </button>
+          )}
           {filtered.map((stop) => (
             <button
               key={stop.id}
@@ -285,6 +404,22 @@ function ReportCard({
   );
 }
 
+function WalkLegBanner({ leg, direction }: { leg: WalkLeg; direction: "from" | "to" }) {
+  return (
+    <div className="flex items-center gap-2 px-3 py-2 bg-surface-container rounded-xl border border-surface-container">
+      <span className="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">directions_walk</span>
+      <div className="min-w-0">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-on-surface-variant/50">
+          {direction === "from" ? "Walk to board" : "Walk after alighting"}
+        </p>
+        <p className="text-[11px] font-semibold text-on-surface truncate">
+          {leg.minutes} min · {leg.distance_m}m · {leg.stop.name}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function Sidebar({
   onFromStop,
   onToStop,
@@ -292,6 +427,7 @@ export default function Sidebar({
   onRouteSelect,
   selectedRouteId,
   planResult,
+  onUserLocation,
 }: SidebarProps) {
   const [allStops, setAllStops] = useState<Stop[]>([]);
   const [loadingStops, setLoadingStops] = useState(true);
@@ -417,7 +553,8 @@ export default function Sidebar({
     onFromStop(stop);
     setError(null);
     onPlanResult(null);
-  }, [onFromStop, onPlanResult]);
+    if (!stop) onUserLocation?.(null);
+  }, [onFromStop, onPlanResult, onUserLocation]);
 
   const handleToStop = useCallback((stop: Stop | null) => {
     setToStop(stop);
@@ -432,7 +569,16 @@ export default function Sidebar({
     setError(null);
     try {
       const res = await fetch(`${API}/api/plan?from_stop=${encodeURIComponent(fromStop.id)}&to_stop=${encodeURIComponent(toStop.id)}`);
-      const data: PlanResult = await res.json();
+      let data: PlanResult = await res.json();
+
+      // No direct route found — try walk-enhanced routing using stop coordinates
+      if (data.type === "none") {
+        const walkRes = await fetch(
+          `${API}/api/plan/walk?from_lat=${fromStop.lat}&from_lon=${fromStop.lon}&to_lat=${toStop.lat}&to_lon=${toStop.lon}`
+        );
+        data = await walkRes.json();
+      }
+
       onPlanResult(data);
       if (data.type === "direct" && data.direct.length > 0) onRouteSelect(data.direct[0].id);
       else if (data.type === "transfer" && data.transfers.length > 0) onRouteSelect(data.transfers[0].leg1.id);
@@ -466,10 +612,12 @@ export default function Sidebar({
             <div className="flex-1 flex flex-col gap-1.5 min-w-0">
               <StopSearch
                 label="From"
-                placeholder={loadingStops ? "Loading stops…" : "Search stop"}
+                placeholder={loadingStops ? "Loading stops…" : "Search stop or use location"}
                 allStops={allStops}
                 value={fromStop}
                 onChange={handleFromStop}
+                showLocationButton
+                onLocationFound={(loc) => onUserLocation?.(loc)}
               />
               <StopSearch
                 label="To"
@@ -537,6 +685,7 @@ export default function Sidebar({
                     {directRoutes.length} route{directRoutes.length > 1 ? "s" : ""}
                   </span>
                 </div>
+                {planResult.from_walk && <WalkLegBanner leg={planResult.from_walk} direction="from" />}
 
                 {/* AI Accessibility Note — above the route list */}
                 {selectedRoute && (loadingAiNote || aiNote) && (
@@ -559,6 +708,7 @@ export default function Sidebar({
                 )}
 
                 <RouteList routes={directRoutes} selectedRouteId={selectedRouteId} onSelect={onRouteSelect} liveShortNames={liveShortNames} nextDepartures={nextDepartures} />
+                {planResult.to_walk && <WalkLegBanner leg={planResult.to_walk} direction="to" />}
 
                 {/* Reports panel — shown when a route is selected */}
                 {selectedRoute && (
@@ -607,6 +757,7 @@ export default function Sidebar({
                     1 transfer
                   </span>
                 </div>
+                {planResult.from_walk && <WalkLegBanner leg={planResult.from_walk} direction="from" />}
                 <div className="space-y-2">
                   {transfers.map((opt, i) => (
                     <TransferCard
@@ -617,6 +768,7 @@ export default function Sidebar({
                     />
                   ))}
                 </div>
+                {planResult.to_walk && <WalkLegBanner leg={planResult.to_walk} direction="to" />}
               </>
             )}
 
