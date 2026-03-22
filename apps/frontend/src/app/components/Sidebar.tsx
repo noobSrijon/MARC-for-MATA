@@ -4,6 +4,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 
 const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001";
 
+interface Vehicle {
+  id: number;
+  route_short_name: string | null;
+}
+
 interface Stop {
   id: string;
   name: string;
@@ -162,6 +167,8 @@ export default function Sidebar({
   const [toStop, setToStop] = useState<Stop | null>(null);
   const [planning, setPlanning] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [liveShortNames, setLiveShortNames] = useState<Set<string>>(new Set());
+  const [nextDepartures, setNextDepartures] = useState<Record<string, { departures: string[]; next_service: string | null }>>({});
 
   useEffect(() => {
     fetch(`${API}/api/stops`)
@@ -169,6 +176,43 @@ export default function Sidebar({
       .then((data) => { setAllStops(data.stops ?? []); setLoadingStops(false); })
       .catch(() => setLoadingStops(false));
   }, []);
+
+  // Poll live vehicles every 15s to detect which routes have a bus right now
+  useEffect(() => {
+    function fetchVehicles() {
+      fetch(`${API}/api/vehicles`)
+        .then((r) => r.json())
+        .then((data: { vehicles: Vehicle[] }) => {
+          const names = new Set<string>();
+          for (const v of data.vehicles ?? []) {
+            if (v.route_short_name) names.add(v.route_short_name);
+          }
+          setLiveShortNames(names);
+        })
+        .catch(() => {});
+    }
+    fetchVehicles();
+    const id = setInterval(fetchVehicles, 15_000);
+    return () => clearInterval(id);
+  }, []);
+
+  // Fetch next scheduled departures for all direct routes whenever they change
+  const directRoutes = planResult?.direct ?? [];
+  useEffect(() => {
+    if (!fromStop || directRoutes.length === 0) { setNextDepartures({}); return; }
+    const results: Record<string, string[]> = {};
+    Promise.all(
+      directRoutes.map((route) =>
+        fetch(`${API}/api/next_departures?route_id=${encodeURIComponent(route.id)}&from_stop=${encodeURIComponent(fromStop.id)}`)
+          .then((r) => r.json())
+          .then((data: { departures: string[]; next_service: string | null }) => {
+            results[route.id] = { departures: data.departures ?? [], next_service: data.next_service ?? null };
+          })
+          .catch(() => { results[route.id] = { departures: [], next_service: null }; })
+      )
+    ).then(() => setNextDepartures({ ...results }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [planResult, fromStop]);
 
   const handleFromStop = useCallback((stop: Stop | null) => {
     setFromStop(stop);
@@ -203,7 +247,6 @@ export default function Sidebar({
 
   const canPlan = fromStop && toStop && fromStop.id !== toStop.id;
 
-  const directRoutes = planResult?.direct ?? [];
   const transfers = planResult?.transfers ?? [];
 
   return (
@@ -283,7 +326,7 @@ export default function Sidebar({
                     These routes serve that corridor but run in the other direction. You may need to travel to a different stop.
                   </p>
                 </div>
-                <RouteList routes={directRoutes} selectedRouteId={selectedRouteId} onSelect={onRouteSelect} />
+                <RouteList routes={directRoutes} selectedRouteId={selectedRouteId} onSelect={onRouteSelect} liveShortNames={liveShortNames} nextDepartures={nextDepartures} />
               </>
             )}
 
@@ -296,7 +339,7 @@ export default function Sidebar({
                     {directRoutes.length} route{directRoutes.length > 1 ? "s" : ""}
                   </span>
                 </div>
-                <RouteList routes={directRoutes} selectedRouteId={selectedRouteId} onSelect={onRouteSelect} />
+                <RouteList routes={directRoutes} selectedRouteId={selectedRouteId} onSelect={onRouteSelect} liveShortNames={liveShortNames} nextDepartures={nextDepartures} />
               </>
             )}
 
@@ -345,15 +388,23 @@ function RouteList({
   routes,
   selectedRouteId,
   onSelect,
+  liveShortNames = new Set(),
+  nextDepartures = {},
 }: {
   routes: Route[];
   selectedRouteId: string | null;
   onSelect: (id: string) => void;
+  liveShortNames?: Set<string>;
+  nextDepartures?: Record<string, { departures: string[]; next_service: string | null }>;
 }) {
   return (
     <div className="space-y-2">
       {routes.map((route) => {
         const isSelected = route.id === selectedRouteId;
+        const isLive = liveShortNames.has(route.short_name);
+        const info = nextDepartures[route.id];
+        const upcoming = info?.departures ?? [];
+        const nextService = info?.next_service ?? null;
         return (
           <button
             key={route.id}
@@ -387,6 +438,21 @@ function RouteList({
                   → {route.headsigns.slice(0, 2).join(" / ")}
                 </p>
               )}
+              {/* Live / next departure indicator */}
+              {isLive ? (
+                <p className="text-[10px] font-semibold mt-1 flex items-center gap-1" style={{ color: "#16a34a" }}>
+                  <span style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: "#16a34a" }} />
+                  Live now
+                </p>
+              ) : upcoming.length > 0 ? (
+                <p className="text-[10px] text-on-surface-variant mt-1">
+                  Next: {upcoming.join(" · ")}
+                </p>
+              ) : nextService ? (
+                <p className="text-[10px] text-on-surface-variant/60 mt-1">Next: {nextService}</p>
+              ) : info && upcoming.length === 0 && !nextService ? (
+                <p className="text-[10px] text-on-surface-variant/50 mt-1">No service this week</p>
+              ) : null}
             </div>
 
             {isSelected && (

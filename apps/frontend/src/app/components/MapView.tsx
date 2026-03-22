@@ -54,8 +54,8 @@ interface MapViewProps {
 
 function statusColor(status: string): string {
   if (status === "on-time") return "#0959b6";
-  if (status === "delayed") return "#ab2d00";
-  if (status === "early") return "#1a7a3a";
+  if (status === "delayed") return "#dc2626";
+  if (status === "early") return "#16a34a";
   return "#555";
 }
 
@@ -204,8 +204,7 @@ export default function MapView({
         if (v.lat == null || v.lng == null) continue;
         seen.add(v.id);
 
-        const statusCol = statusColor(v.status);
-        const markerColor = v.route_color ?? statusCol;
+        const markerColor = statusColor(v.status);
         const routeLabel = v.route_short_name ? `Route ${v.route_short_name}` : v.destination ?? "Bus";
         const routeName = v.route_long_name ?? v.destination ?? "";
         const isOnDirectRoute = v.route_short_name != null && directRouteNames.has(v.route_short_name);
@@ -229,9 +228,7 @@ export default function MapView({
                 box-shadow:0 2px ${isOnDirectRoute ? "12px" : "8px"} rgba(0,0,0,${isOnDirectRoute ? "0.45" : "0.35"});
                 cursor:pointer;position:relative;z-index:1;
               ">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#fff">
-                  <path d="${BUS_SVG_PATH}"/>
-                </svg>
+                <span style="color:#fff;font-family:Inter,sans-serif;font-size:${v.route_short_name && v.route_short_name.length > 2 ? "8" : "10"}px;font-weight:700;line-height:1;letter-spacing:-0.3px">${v.route_short_name ?? "?"}</span>
               </div>
               ${isOnDirectRoute ? `
                 <div style="
@@ -289,7 +286,7 @@ export default function MapView({
             </div>` : ""}
             ${v.next_stop ? `<div style="margin-bottom:4px"><span style="color:#888;font-size:10px;text-transform:uppercase;letter-spacing:.05em">Next stop</span><br><b>${v.next_stop}</b>${v.eta_minutes != null ? ` <span style="color:#888">· ${v.eta_minutes} min</span>` : ""}</div>` : ""}
             <div style="margin-top:6px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:4px">
-              <span style="font-size:11px;font-weight:700;color:${statusCol};background:${statusCol}18;padding:2px 8px;border-radius:99px">${v.status_raw || v.status}</span>
+              <span style="font-size:11px;font-weight:700;color:${markerColor};background:${markerColor}18;padding:2px 8px;border-radius:99px">${v.status_raw || v.status}</span>
               ${v.speed != null ? `<span style="font-size:11px;color:#888">${v.speed} mph</span>` : ""}
               ${v.load ? `<span style="font-size:11px;color:#888">${v.load}</span>` : ""}
             </div>

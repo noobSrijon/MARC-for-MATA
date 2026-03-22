@@ -115,7 +115,8 @@ class GTFSService:
                 seq = int(row["stop_sequence"])
             except (ValueError, KeyError):
                 seq = 0
-            rows_by_trip[tid].append({"stop_id": sid, "stop_sequence": seq})
+            dep_time = row.get("departure_time", "").strip()
+            rows_by_trip[tid].append({"stop_id": sid, "stop_sequence": seq, "departure_time": dep_time})
             self._stop_to_trips[sid].add(tid)
 
         for tid, entries in rows_by_trip.items():
@@ -210,6 +211,74 @@ class GTFSService:
             if stop:
                 stops.append(stop)
         return stops
+
+    def _parse_gtfs_minutes(self, time_str: str) -> int | None:
+        """Parse GTFS HH:MM:SS time (may exceed 24:00) into minutes since midnight."""
+        if not time_str:
+            return None
+        try:
+            parts = time_str.split(":")
+            return int(parts[0]) * 60 + int(parts[1])
+        except (ValueError, IndexError):
+            return None
+
+    def _active_service_ids_for_date(self, date) -> set[str]:
+        date_str = date.strftime("%Y%m%d")
+        day_names = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+        day_col = day_names[date.weekday()]
+        active = set()
+        for sid, cal in self._calendar.items():
+            if cal["start_date"] <= date_str <= cal["end_date"] and cal[day_col] == "1":
+                active.add(sid)
+        return active
+
+    def _departures_for_route_on_date(self, route_id: str, from_ids: set[str], active: set[str], after_minutes: int | None = None) -> list[int]:
+        deps: list[int] = []
+        for trip_id, trip in self._trips.items():
+            if trip["route_id"] != route_id:
+                continue
+            if trip["service_id"] not in active:
+                continue
+            for entry in self._stop_times_by_trip.get(trip_id, []):
+                if entry["stop_id"] in from_ids:
+                    dep = self._parse_gtfs_minutes(entry.get("departure_time", ""))
+                    if dep is not None and (after_minutes is None or dep > after_minutes):
+                        deps.append(dep)
+                    break
+        deps.sort()
+        return deps
+
+    def _fmt_minutes(self, dep: int) -> str:
+        h, m = divmod(dep, 60)
+        suffix = "AM" if h < 12 else "PM"
+        display_h = h % 12 or 12
+        return f"{display_h}:{m:02d} {suffix}"
+
+    def get_next_departures(self, route_id: str, from_stop_id: str, limit: int = 3) -> dict:
+        """Return upcoming departures. If none today, report next service day."""
+        from_ids = self._expand_stop_ids(from_stop_id)
+        now = datetime.now(MEMPHIS_TZ)
+        now_minutes = now.hour * 60 + now.minute
+
+        # Today's upcoming trips
+        today_active = self._active_service_ids_for_date(now.date())
+        today_deps = self._departures_for_route_on_date(route_id, from_ids, today_active, after_minutes=now_minutes)
+        if today_deps:
+            return {"departures": [self._fmt_minutes(d) for d in today_deps[:limit]], "next_service": None}
+
+        # Look ahead up to 7 days
+        from datetime import timedelta
+        day_names = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+        for offset in range(1, 8):
+            future_date = now.date() + timedelta(days=offset)
+            future_active = self._active_service_ids_for_date(future_date)
+            future_deps = self._departures_for_route_on_date(route_id, from_ids, future_active)
+            if future_deps:
+                label = "Tomorrow" if offset == 1 else day_names[future_date.weekday()]
+                first = self._fmt_minutes(future_deps[0])
+                return {"departures": [], "next_service": f"{label} at {first}"}
+
+        return {"departures": [], "next_service": None}
 
     def plan_trip(self, from_stop_id, to_stop_id):
         active = self._active_service_ids()

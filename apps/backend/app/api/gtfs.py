@@ -52,3 +52,16 @@ def get_shape(shape_id: str):
 def get_route_stops(route_id: str):
     stops = gtfs.get_route_stops(route_id)
     return jsonify({"route_id": route_id, "stops": stops, "count": len(stops)})
+
+
+@bp.route("/next_departures", methods=["GET"])
+def next_departures():
+    """Return next scheduled departure times for a route from a stop.
+    ?route_id=X&from_stop=Y
+    """
+    route_id = (request.args.get("route_id") or "").strip()
+    from_stop = (request.args.get("from_stop") or "").strip()
+    if not route_id or not from_stop:
+        return jsonify({"error": "route_id and from_stop are required"}), 400
+    times = gtfs.get_next_departures(route_id, from_stop)
+    return jsonify({"route_id": route_id, "from_stop": from_stop, "departures": times})
