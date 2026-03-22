@@ -31,11 +31,6 @@ export interface IssueReport {
 const ISSUE_TYPES = [
   { icon: "accessible", label: "Broken Ramp", description: "Wheelchair ramp malfunctioning or stuck" },
   { icon: "elevator", label: "Elevator Out", description: "Elevator at a stop is unavailable" },
-  { icon: "groups", label: "Overcrowded", description: "Bus too full for passengers or mobility devices" },
-  { icon: "visibility_off", label: "Signage / Audio", description: "Missing announcements or wrong signs" },
-  { icon: "ac_unit", label: "Climate Issue", description: "A/C or heat not working" },
-  { icon: "report", label: "Safety Concern", description: "Unsafe conditions on board or at stop" },
-  { icon: "schedule", label: "Schedule Issue", description: "Bus significantly off schedule" },
   { icon: "more_horiz", label: "Other", description: "Something else not listed here" },
 ];
 
@@ -134,7 +129,7 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 mb-2.5">
               What&apos;s the issue?
             </p>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-1 gap-2">
               {ISSUE_TYPES.map((issue, i) => {
                 const isSelected = selectedType === i;
                 return (
