@@ -65,6 +65,8 @@ def fetch_vehicles(
     timeout: float = DEFAULT_TIMEOUT,
 ) -> list[dict[str, Any]]:
 
+    if not base_url:
+        raise ValueError("MATA_API_BASE_URL is not configured")
     url = base_url.rstrip("/") + path
     now_central = datetime.now(MEMPHIS_TZ)
     params = {"_tmp": int(now_central.timestamp()), "lignes": lignes}
