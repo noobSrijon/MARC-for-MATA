@@ -44,6 +44,19 @@ const ISSUE_TYPES = [
 
 const MAX_IMAGES = 3;
 
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const result = reader.result as string;
+      // Strip the data URL prefix, keep only the base64 part
+      resolve(result.split(",")[1]);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
 async function uploadImage(file: File): Promise<string | null> {
   try {
     const formData = new FormData();
@@ -55,6 +68,22 @@ async function uploadImage(file: File): Promise<string | null> {
     if (!res.ok) return null;
     const data = await res.json();
     return data.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function analyzeImageWithAI(file: File): Promise<string | null> {
+  try {
+    const base64 = await fileToBase64(file);
+    const res = await fetch(`${API}/api/reports/analyze-image`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ image_base64: base64, mime_type: file.type }),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.description ?? null;
   } catch {
     return null;
   }
@@ -77,6 +106,8 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
   const [selectedType, setSelectedType] = useState<number | null>(null);
   const [description, setDescription] = useState("");
   const [images, setImages] = useState<SelectedImage[]>([]);
+  const [analyzingImage, setAnalyzingImage] = useState(false);
+  const [aiDescriptionUsed, setAiDescriptionUsed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -86,9 +117,10 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
   const routeName = bus.routeLongName ?? "";
   const color = bus.routeColor ?? "#0959b6";
 
-  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const files = e.target.files;
     if (!files) return;
+
     const newImages: SelectedImage[] = [];
     const remaining = MAX_IMAGES - images.length;
     for (let i = 0; i < Math.min(files.length, remaining); i++) {
@@ -96,8 +128,21 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
       if (!file.type.startsWith("image/")) continue;
       newImages.push({ file, previewUrl: URL.createObjectURL(file) });
     }
+
+    if (newImages.length === 0) return;
     setImages((prev) => [...prev, ...newImages]);
     if (fileInputRef.current) fileInputRef.current.value = "";
+
+    // Analyze the first new image with AI to generate a description
+    const firstNew = newImages[0];
+    setAnalyzingImage(true);
+    const aiDesc = await analyzeImageWithAI(firstNew.file);
+    setAnalyzingImage(false);
+
+    if (aiDesc) {
+      setDescription(aiDesc);
+      setAiDescriptionUsed(true);
+    }
   }
 
   function removeImage(index: number) {
@@ -106,6 +151,11 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
       URL.revokeObjectURL(removed.previewUrl);
       return prev.filter((_, i) => i !== index);
     });
+    // Clear the AI-filled description if the user removes all images
+    if (images.length === 1 && aiDescriptionUsed) {
+      setDescription("");
+      setAiDescriptionUsed(false);
+    }
   }
 
   async function handleSubmit() {
@@ -243,21 +293,7 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
             </div>
           </div>
 
-          {/* Description */}
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 mb-2">
-              Details <span className="normal-case tracking-normal font-normal">(optional)</span>
-            </p>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe the issue in more detail..."
-              rows={3}
-              className="w-full bg-surface-container rounded-xl px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none resize-none focus:ring-2 focus:ring-primary/30 transition-shadow"
-            />
-          </div>
-
-          {/* Photo upload */}
+          {/* Photo upload — before description */}
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 mb-2">
               Photos <span className="normal-case tracking-normal font-normal">(optional, up to {MAX_IMAGES})</span>
@@ -293,11 +329,44 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
               {images.length < MAX_IMAGES && (
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-20 h-20 rounded-xl border-2 border-dashed border-on-surface-variant/20 flex flex-col items-center justify-center gap-1 text-on-surface-variant/50 hover:border-primary/40 hover:text-primary/60 hover:bg-primary/5 transition-all"
+                  disabled={analyzingImage}
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-on-surface-variant/20 flex flex-col items-center justify-center gap-1 text-on-surface-variant/50 hover:border-primary/40 hover:text-primary/60 hover:bg-primary/5 transition-all disabled:opacity-40"
                 >
                   <span className="material-symbols-outlined text-[22px]">add_a_photo</span>
                   <span className="text-[9px] font-bold">Add</span>
                 </button>
+              )}
+            </div>
+          </div>
+
+          {/* Description — with AI analysis indicator */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60">
+                Details <span className="normal-case tracking-normal font-normal">(optional)</span>
+              </p>
+              {aiDescriptionUsed && !analyzingImage && (
+                <span className="flex items-center gap-1 text-[9px] font-semibold text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">
+                  <span className="material-symbols-outlined text-[11px]">auto_awesome</span>
+                  AI generated
+                </span>
+              )}
+            </div>
+
+            <div className="relative">
+              <textarea
+                value={description}
+                onChange={(e) => { setDescription(e.target.value); setAiDescriptionUsed(false); }}
+                placeholder={analyzingImage ? "" : "Describe the issue in more detail..."}
+                rows={3}
+                disabled={analyzingImage}
+                className="w-full bg-surface-container rounded-xl px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none resize-none focus:ring-2 focus:ring-primary/30 transition-shadow disabled:opacity-60"
+              />
+              {analyzingImage && (
+                <div className="absolute inset-0 flex items-center justify-center gap-2 bg-surface-container rounded-xl">
+                  <span className="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span>
+                  <span className="text-[11px] font-semibold text-primary">AI analyzing image…</span>
+                </div>
               )}
             </div>
           </div>
@@ -310,7 +379,7 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
           )}
           <button
             onClick={handleSubmit}
-            disabled={selectedType === null || submitting}
+            disabled={selectedType === null || submitting || analyzingImage}
             className="w-full h-12 bg-primary text-on-primary font-bold rounded-xl text-sm hover:bg-primary-dim active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {submitting ? (

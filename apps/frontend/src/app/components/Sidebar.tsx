@@ -39,6 +39,21 @@ interface PlanResult {
   transfers: TransferOption[];
 }
 
+interface Report {
+  id: string;
+  busId: number;
+  equipmentNumber: string;
+  routeShortName: string | null;
+  routeLongName: string | null;
+  issueType: string;
+  issueIcon: string;
+  description: string;
+  imageUrls: string[];
+  timestamp: number;
+  likes?: number;
+  dislikes?: number;
+}
+
 interface SidebarProps {
   onFromStop: (stop: Stop | null) => void;
   onToStop: (stop: Stop | null) => void;
@@ -46,6 +61,20 @@ interface SidebarProps {
   onRouteSelect: (routeId: string) => void;
   selectedRouteId: string | null;
   planResult: PlanResult | null;
+}
+
+function formatTimeAgo(timestamp: number): string {
+  // Normalise: if timestamp looks like seconds (< year 2100 in ms), convert to ms
+  const ts = timestamp < 1e12 ? timestamp * 1000 : timestamp;
+  const diff = Date.now() - ts;
+  if (diff < 0) return "Just now";
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+  if (minutes < 1) return "Just now";
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  return `${days}d ago`;
 }
 
 function RouteBadge({ route }: { route: Route }) {
@@ -153,6 +182,86 @@ function StopSearch({
   );
 }
 
+function ReportCard({
+  report,
+  voted,
+  onVote,
+}: {
+  report: Report;
+  voted?: "like" | "dislike";
+  onVote: (id: string, vote: "like" | "dislike") => void;
+}) {
+  const images = report.imageUrls ?? [];
+  return (
+    <div className="bg-white rounded-xl border border-surface-container p-2.5">
+      <div className="flex items-start gap-2">
+        <span className="material-symbols-outlined text-[18px] text-tertiary mt-0.5 shrink-0">
+          {report.issueIcon || "flag"}
+        </span>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-[11px] font-bold text-on-surface truncate">{report.issueType}</p>
+            <p className="text-[9px] text-on-surface-variant/50 shrink-0">{formatTimeAgo(report.timestamp)}</p>
+          </div>
+          {report.description && (
+            <p className="text-[10px] text-on-surface-variant mt-0.5 leading-relaxed">{report.description}</p>
+          )}
+          <p className="text-[9px] text-on-surface-variant/40 mt-1">Bus #{report.equipmentNumber}</p>
+        </div>
+      </div>
+
+      {/* Image thumbnails */}
+      {images.length > 0 && (
+        <div className="flex gap-1.5 mt-2 flex-wrap">
+          {images.map((url, i) => (
+            <a key={i} href={url} target="_blank" rel="noopener noreferrer">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={url}
+                alt={`Report image ${i + 1}`}
+                className="w-14 h-14 rounded-lg object-cover border border-surface-container hover:opacity-80 transition-opacity"
+              />
+            </a>
+          ))}
+        </div>
+      )}
+
+      {/* Like / Dislike */}
+      <div className="flex items-center gap-2 mt-2 pt-2 border-t border-surface-container">
+        <button
+          onClick={() => onVote(report.id, "like")}
+          disabled={!!voted}
+          className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg transition-all ${
+            voted === "like"
+              ? "bg-green-100 text-green-700"
+              : voted
+              ? "opacity-40 cursor-not-allowed text-on-surface-variant"
+              : "hover:bg-green-50 text-on-surface-variant hover:text-green-700"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[13px]">thumb_up</span>
+          {report.likes ?? 0}
+        </button>
+        <button
+          onClick={() => onVote(report.id, "dislike")}
+          disabled={!!voted}
+          className={`flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded-lg transition-all ${
+            voted === "dislike"
+              ? "bg-red-100 text-red-700"
+              : voted
+              ? "opacity-40 cursor-not-allowed text-on-surface-variant"
+              : "hover:bg-red-50 text-on-surface-variant hover:text-red-700"
+          }`}
+        >
+          <span className="material-symbols-outlined text-[13px]">thumb_down</span>
+          {report.dislikes ?? 0}
+        </button>
+        <span className="text-[9px] text-on-surface-variant/40 ml-auto">Was this helpful?</span>
+      </div>
+    </div>
+  );
+}
+
 export default function Sidebar({
   onFromStop,
   onToStop,
@@ -169,6 +278,13 @@ export default function Sidebar({
   const [error, setError] = useState<string | null>(null);
   const [liveShortNames, setLiveShortNames] = useState<Set<string>>(new Set());
   const [nextDepartures, setNextDepartures] = useState<Record<string, { departures: string[]; next_service: string | null }>>({});
+
+  // Reports state
+  const [routeReports, setRouteReports] = useState<Report[]>([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [votedReports, setVotedReports] = useState<Record<string, "like" | "dislike">>({});
+  const [aiNote, setAiNote] = useState<string | null>(null);
+  const [loadingAiNote, setLoadingAiNote] = useState(false);
 
   useEffect(() => {
     fetch(`${API}/api/stops`)
@@ -200,7 +316,7 @@ export default function Sidebar({
   const directRoutes = planResult?.direct ?? [];
   useEffect(() => {
     if (!fromStop || directRoutes.length === 0) { setNextDepartures({}); return; }
-    const results: Record<string, string[]> = {};
+    const results: Record<string, { departures: string[]; next_service: string | null }> = {};
     Promise.all(
       directRoutes.map((route) =>
         fetch(`${API}/api/next_departures?route_id=${encodeURIComponent(route.id)}&from_stop=${encodeURIComponent(fromStop.id)}`)
@@ -213,6 +329,65 @@ export default function Sidebar({
     ).then(() => setNextDepartures({ ...results }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [planResult, fromStop]);
+
+  // Get selected direct route object
+  const selectedRoute = planResult?.type === "direct"
+    ? directRoutes.find((r) => r.id === selectedRouteId) ?? null
+    : null;
+
+  // Fetch reports for the selected direct route
+  useEffect(() => {
+    if (!selectedRoute) {
+      setRouteReports([]);
+      setAiNote(null);
+      return;
+    }
+    setLoadingReports(true);
+    setVotedReports({});
+    fetch(`${API}/api/reports?route_short_name=${encodeURIComponent(selectedRoute.short_name)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setRouteReports(data.reports ?? []);
+        setLoadingReports(false);
+      })
+      .catch(() => setLoadingReports(false));
+  }, [selectedRouteId, planResult?.type]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch AI note once reports are loaded (only if there are reports)
+  useEffect(() => {
+    if (!selectedRoute || routeReports.length === 0) {
+      setAiNote(null);
+      return;
+    }
+    setLoadingAiNote(true);
+    fetch(`${API}/api/reports/ai-note?route_short_name=${encodeURIComponent(selectedRoute.short_name)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        setAiNote(data.note ?? null);
+        setLoadingAiNote(false);
+      })
+      .catch(() => setLoadingAiNote(false));
+  }, [routeReports]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleVote(reportId: string, vote: "like" | "dislike") {
+    if (votedReports[reportId]) return;
+    try {
+      const res = await fetch(`${API}/api/reports/${reportId}/vote`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vote }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setVotedReports((prev) => ({ ...prev, [reportId]: vote }));
+        setRouteReports((prev) =>
+          prev.map((r) =>
+            r.id === reportId ? { ...r, likes: data.likes, dislikes: data.dislikes } : r
+          )
+        );
+      }
+    } catch { /* ignore */ }
+  }
 
   const handleFromStop = useCallback((stop: Stop | null) => {
     setFromStop(stop);
@@ -339,7 +514,64 @@ export default function Sidebar({
                     {directRoutes.length} route{directRoutes.length > 1 ? "s" : ""}
                   </span>
                 </div>
+
+                {/* AI Accessibility Note — above the route list */}
+                {selectedRoute && (loadingAiNote || aiNote) && (
+                  <div className="bg-primary/5 border border-primary/10 rounded-xl p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <span className="material-symbols-outlined text-[14px] text-primary">accessible</span>
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-primary">
+                        AI Accessibility Note
+                      </p>
+                    </div>
+                    {loadingAiNote ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="material-symbols-outlined text-[14px] animate-spin text-primary/50">progress_activity</span>
+                        <p className="text-[10px] text-on-surface-variant/60">Analyzing ramp accessibility…</p>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-on-surface-variant leading-relaxed">{aiNote}</p>
+                    )}
+                  </div>
+                )}
+
                 <RouteList routes={directRoutes} selectedRouteId={selectedRouteId} onSelect={onRouteSelect} liveShortNames={liveShortNames} nextDepartures={nextDepartures} />
+
+                {/* Reports panel — shown when a route is selected */}
+                {selectedRoute && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="material-symbols-outlined text-[14px] text-on-surface-variant">flag</span>
+                      <h3 className="text-xs font-bold text-on-surface flex-1">Route Reports</h3>
+                      {routeReports.length > 0 && (
+                        <span className="text-[10px] font-bold bg-tertiary/10 text-tertiary px-1.5 py-0.5 rounded-full">
+                          {routeReports.length}
+                        </span>
+                      )}
+                    </div>
+
+                    {loadingReports ? (
+                      <div className="flex items-center justify-center py-4">
+                        <span className="material-symbols-outlined text-[20px] animate-spin text-on-surface-variant/40">progress_activity</span>
+                      </div>
+                    ) : routeReports.length === 0 ? (
+                      <p className="text-[10px] text-on-surface-variant/50 text-center py-3 bg-surface-container/50 rounded-xl">
+                        No reports for Route {selectedRoute.short_name} yet.
+                      </p>
+                    ) : (
+                      <div className="space-y-2">
+                        {routeReports.map((report) => (
+                          <ReportCard
+                            key={report.id}
+                            report={report}
+                            voted={votedReports[report.id]}
+                            onVote={handleVote}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
 

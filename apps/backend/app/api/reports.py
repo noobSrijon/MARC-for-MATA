@@ -6,7 +6,9 @@ Handles image uploads for accessibility reports and serves stored images from Mo
 
 import io
 import logging
+import os
 import time
+import requests as http_requests
 from bson import ObjectId
 from bson.errors import InvalidId
 from flask import Blueprint, request, jsonify, send_file, current_app
@@ -44,6 +46,7 @@ def _get_gridfs():
 def reports():
     """
     GET /api/reports - List recent reports from the database.
+                       Optionally filter by ?route_short_name=X
     POST /api/reports - Create a new report (issue type, description, bus info, image URLs).
     """
     db = _get_db()
@@ -52,7 +55,12 @@ def reports():
 
     if request.method == "GET":
         try:
-            cursor = db.reports.find().sort("timestamp", -1).limit(50)
+            query = {}
+            route_short_name = request.args.get("route_short_name")
+            if route_short_name:
+                query["routeShortName"] = route_short_name
+
+            cursor = db.reports.find(query).sort("timestamp", -1).limit(50)
             docs = list(cursor)
             for d in docs:
                 d["_id"] = str(d["_id"])
@@ -81,6 +89,8 @@ def reports():
         "description": (data.get("description") or "").strip(),
         "imageUrls": data.get("imageUrls") or [],
         "timestamp": data.get("timestamp") or int(time.time() * 1000),
+        "likes": 0,
+        "dislikes": 0,
     }
 
     try:
@@ -90,6 +100,197 @@ def reports():
     except Exception as e:
         logger.exception("Failed to save report: %s", e)
         return jsonify({"error": "Failed to save report"}), 500
+
+
+@bp.route("/<report_id>/vote", methods=["POST"])
+def vote_report(report_id):
+    """
+    POST /api/reports/<report_id>/vote
+    Body: {"vote": "like" | "dislike"}
+    Increments the like or dislike count on a report.
+    """
+    db = _get_db()
+    if db is None:
+        return jsonify({"error": "Storage not configured"}), 503
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "JSON body required"}), 400
+
+    vote = data.get("vote")
+    if vote not in ("like", "dislike"):
+        return jsonify({"error": "vote must be 'like' or 'dislike'"}), 400
+
+    field = "likes" if vote == "like" else "dislikes"
+
+    # Try finding by custom string id first, then by ObjectId
+    doc = db.reports.find_one({"id": report_id})
+    if not doc:
+        try:
+            doc = db.reports.find_one({"_id": ObjectId(report_id)})
+        except (InvalidId, TypeError):
+            pass
+
+    if not doc:
+        return jsonify({"error": "Report not found"}), 404
+
+    # Use aggregation pipeline update so $ifNull handles existing null fields (pre-migration docs)
+    db.reports.update_one(
+        {"_id": doc["_id"]},
+        [{"$set": {field: {"$add": [{"$ifNull": [f"${field}", 0]}, 1]}}}]
+    )
+    updated = db.reports.find_one({"_id": doc["_id"]})
+    return jsonify({
+        "ok": True,
+        "likes": updated.get("likes", 0),
+        "dislikes": updated.get("dislikes", 0),
+    })
+
+
+@bp.route("/ai-note", methods=["GET"])
+def ai_note():
+    """
+    GET /api/reports/ai-note?route_short_name=X
+    Uses OpenRouter AI to summarize what reports say about accessibility for ramp users.
+    """
+    route_short_name = request.args.get("route_short_name")
+    if not route_short_name:
+        return jsonify({"error": "route_short_name required"}), 400
+
+    db = _get_db()
+    if db is None:
+        return jsonify({"error": "Storage not configured"}), 503
+
+    cursor = db.reports.find({"routeShortName": route_short_name}).sort("timestamp", -1).limit(20)
+    docs = list(cursor)
+
+    if not docs:
+        return jsonify({"note": "No reports available yet for this route."})
+
+    # Build report context text
+    report_lines = []
+    for d in docs:
+        issue = d.get("issueType", "Unknown issue")
+        desc = (d.get("description") or "").strip()
+        likes = d.get("likes") or 0
+        dislikes = d.get("dislikes") or 0
+        line = f"- {issue}"
+        if desc:
+            line += f": {desc}"
+        line += f" (helpful: {likes}, not helpful: {dislikes})"
+        report_lines.append(line)
+
+    context = "\n".join(report_lines)
+
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not api_key:
+        return jsonify({"note": "AI summary not available (API key not configured)."})
+
+    try:
+        response = http_requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://marc-for-mata.app",
+                "X-Title": "MARC for MATA",
+            },
+            json={
+                "model": "openai/gpt-3.5-turbo",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are a transit accessibility assistant for MATA (Memphis Area Transit Authority). "
+                            "Summarize user-submitted reports about a bus route, focusing specifically on "
+                            "wheelchair ramp and accessibility issues. Be concise (2-3 sentences max) and practical. "
+                            "If there are no ramp-related reports, say so briefly."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Here are recent user reports for bus route {route_short_name}:\n\n"
+                            f"{context}\n\n"
+                            "What do these reports say about accessibility for ramp and wheelchair users? "
+                            "Give a short, practical summary."
+                        ),
+                    },
+                ],
+                "max_tokens": 150,
+            },
+            timeout=15,
+        )
+        result = response.json()
+        note = result["choices"][0]["message"]["content"].strip()
+        return jsonify({"note": note})
+    except Exception as e:
+        logger.exception("AI note failed: %s", e)
+        return jsonify({"note": "AI accessibility summary temporarily unavailable."})
+
+
+@bp.route("/analyze-image", methods=["POST"])
+def analyze_image():
+    """
+    POST /api/reports/analyze-image
+    Body: {"image_base64": "<base64>", "mime_type": "image/jpeg"}
+    Uses OpenRouter vision model to describe the accessibility issue in the image.
+    """
+    data = request.get_json()
+    if not data or not data.get("image_base64"):
+        return jsonify({"error": "image_base64 required"}), 400
+
+    image_base64 = data["image_base64"]
+    mime_type = data.get("mime_type", "image/jpeg")
+
+    api_key = os.environ.get("OPENROUTER_API_KEY", "")
+    if not api_key:
+        return jsonify({"error": "AI not configured"}), 503
+
+    try:
+        response = http_requests.post(
+            "https://openrouter.ai/api/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://marc-for-mata.app",
+                "X-Title": "MARC for MATA",
+            },
+            json={
+                "model": "openai/gpt-4o-mini",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image_url",
+                                "image_url": {
+                                    "url": f"data:{mime_type};base64,{image_base64}"
+                                },
+                            },
+                            {
+                                "type": "text",
+                                "text": (
+                                    "This photo was submitted with a MATA (Memphis Area Transit Authority) bus accessibility report. "
+                                    "Write 1-2 sentences in first-person as the person reporting the problem — like a complaint or issue report, not a description. "
+                                    "Example style: 'The wheelchair ramp was stuck and wouldn't deploy, making it impossible to board.' "
+                                    "Focus on the impact of the problem (e.g. couldn't board, safety hazard, ramp broken) based on what you see. "
+                                    "Do not start with 'I can see' or describe the photo — write as if you experienced the issue."
+                                ),
+                            },
+                        ],
+                    }
+                ],
+                "max_tokens": 120,
+            },
+            timeout=20,
+        )
+        result = response.json()
+        description = result["choices"][0]["message"]["content"].strip()
+        return jsonify({"description": description})
+    except Exception as e:
+        logger.exception("Image analysis failed: %s", e)
+        return jsonify({"error": "Analysis failed"}), 500
 
 
 @bp.route("/upload-image", methods=["POST"])
