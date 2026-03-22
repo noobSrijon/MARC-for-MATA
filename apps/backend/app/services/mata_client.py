@@ -102,9 +102,11 @@ def fetch_vehicles_safe(
     try:
         vehicles = fetch_vehicles(base_url, path, lignes, timeout=timeout)
         if not vehicles:
+            logger.warning("No vehicles found, loading mock data")
             return _load_mock()
         return vehicles
     except requests.RequestException as e:
+        logger.error(f"Request exception: {e}")
         return _load_mock()
     except (KeyError, TypeError, ValueError) as e:
         return _load_mock()
