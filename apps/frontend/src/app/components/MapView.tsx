@@ -44,12 +44,21 @@ interface RouteResult {
   shape_id: string;
 }
 
+interface ReportBusInfo {
+  id: number;
+  equipmentNumber: string;
+  routeShortName: string | null;
+  routeLongName: string | null;
+  routeColor: string | null;
+}
+
 interface MapViewProps {
   fromStop: Stop | null;
   toStop: Stop | null;
   routeResults: RouteResult[];
   selectedRouteId: string | null;
   onRouteSelect: (routeId: string) => void;
+  onReportIssue: (bus: ReportBusInfo) => void;
 }
 
 function statusColor(status: string): string {
@@ -114,6 +123,7 @@ export default function MapView({
   routeResults,
   selectedRouteId,
   onRouteSelect,
+  onReportIssue,
 }: MapViewProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<LMap | null>(null);
@@ -123,6 +133,9 @@ export default function MapView({
   const fromMarkerRef = useRef<CircleMarker | null>(null);
   const toMarkerRef = useRef<CircleMarker | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const vehiclesRef = useRef<Vehicle[]>([]);
+  const onReportIssueRef = useRef(onReportIssue);
+  onReportIssueRef.current = onReportIssue;
 
   // Init Leaflet map once
   useEffect(() => {
@@ -168,6 +181,36 @@ export default function MapView({
       mapRef.current?.remove();
       mapRef.current = null;
     };
+  }, []);
+
+  // Keep vehiclesRef in sync for event delegation lookups
+  useEffect(() => {
+    vehiclesRef.current = vehicles;
+  }, [vehicles]);
+
+  // Report-issue button delegation: clicks on [data-report-bus-id] inside popups
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    if (!container) return;
+
+    function handleClick(e: MouseEvent) {
+      const btn = (e.target as HTMLElement).closest<HTMLElement>("[data-report-bus-id]");
+      if (!btn) return;
+      const busId = Number(btn.dataset.reportBusId);
+      const v = vehiclesRef.current.find((veh) => veh.id === busId);
+      if (!v) return;
+      mapRef.current?.closePopup();
+      onReportIssueRef.current({
+        id: v.id,
+        equipmentNumber: v.equipment_number ?? String(v.id),
+        routeShortName: v.route_short_name,
+        routeLongName: v.route_long_name,
+        routeColor: v.route_color,
+      });
+    }
+
+    container.addEventListener("click", handleClick);
+    return () => container.removeEventListener("click", handleClick);
   }, []);
 
   // Fetch live vehicles every 15 s
@@ -290,6 +333,24 @@ export default function MapView({
               ${v.speed != null ? `<span style="font-size:11px;color:#888">${v.speed} mph</span>` : ""}
               ${v.load ? `<span style="font-size:11px;color:#888">${v.load}</span>` : ""}
             </div>
+            <button
+              data-report-bus-id="${v.id}"
+              style="
+                margin-top:10px;width:100%;
+                display:flex;align-items:center;justify-content:center;gap:6px;
+                padding:8px 0;border-radius:10px;border:none;
+                background:#ab2d00;color:#fff;
+                font-family:Inter,sans-serif;font-size:12px;font-weight:700;
+                cursor:pointer;transition:opacity 0.15s;
+              "
+              onmouseover="this.style.opacity='0.85'"
+              onmouseout="this.style.opacity='1'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="#fff">
+                <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+              </svg>
+              Report Issue
+            </button>
           </div>`;
 
         if (existing.has(v.id)) {
