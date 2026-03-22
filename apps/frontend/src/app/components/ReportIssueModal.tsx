@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+
+const API = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5001";
 
 interface BusInfo {
   id: number;
@@ -25,7 +27,13 @@ export interface IssueReport {
   issueType: string;
   issueIcon: string;
   description: string;
+  imageUrls: string[];
   timestamp: number;
+}
+
+interface SelectedImage {
+  file: File;
+  previewUrl: string;
 }
 
 const ISSUE_TYPES = [
@@ -34,17 +42,68 @@ const ISSUE_TYPES = [
   { icon: "more_horiz", label: "Other", description: "Something else not listed here" },
 ];
 
+const MAX_IMAGES = 3;
+
+async function uploadImage(file: File): Promise<string | null> {
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    const res = await fetch(`${API}/api/reports/upload-image`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.url ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssueModalProps) {
   const [selectedType, setSelectedType] = useState<number | null>(null);
   const [description, setDescription] = useState("");
+  const [images, setImages] = useState<SelectedImage[]>([]);
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const routeLabel = bus.routeShortName ? `Route ${bus.routeShortName}` : "Bus";
   const routeName = bus.routeLongName ?? "";
   const color = bus.routeColor ?? "#0959b6";
 
-  function handleSubmit() {
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files) return;
+    const newImages: SelectedImage[] = [];
+    const remaining = MAX_IMAGES - images.length;
+    for (let i = 0; i < Math.min(files.length, remaining); i++) {
+      const file = files[i];
+      if (!file.type.startsWith("image/")) continue;
+      newImages.push({ file, previewUrl: URL.createObjectURL(file) });
+    }
+    setImages((prev) => [...prev, ...newImages]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function removeImage(index: number) {
+    setImages((prev) => {
+      const removed = prev[index];
+      URL.revokeObjectURL(removed.previewUrl);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
+
+  async function handleSubmit() {
     if (selectedType === null) return;
+    setSubmitting(true);
+
+    const uploadedUrls: string[] = [];
+    for (const img of images) {
+      const url = await uploadImage(img.file);
+      if (url) uploadedUrls.push(url);
+    }
+
     const issueType = ISSUE_TYPES[selectedType];
     const report: IssueReport = {
       id: `rpt-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -55,9 +114,11 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
       issueType: issueType.label,
       issueIcon: issueType.icon,
       description: description.trim(),
+      imageUrls: uploadedUrls,
       timestamp: Date.now(),
     };
     onSubmit(report);
+    setSubmitting(false);
     setSubmitted(true);
   }
 
@@ -172,17 +233,71 @@ export default function ReportIssueModal({ bus, onClose, onSubmit }: ReportIssue
               className="w-full bg-surface-container rounded-xl px-3 py-2.5 text-sm text-on-surface placeholder:text-on-surface-variant/40 outline-none resize-none focus:ring-2 focus:ring-primary/30 transition-shadow"
             />
           </div>
+
+          {/* Photo upload */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant/60 mb-2">
+              Photos <span className="normal-case tracking-normal font-normal">(optional, up to {MAX_IMAGES})</span>
+            </p>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+
+            <div className="flex gap-2 flex-wrap">
+              {images.map((img, i) => (
+                <div key={i} className="relative w-20 h-20 rounded-xl overflow-hidden group">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={img.previewUrl}
+                    alt={`Upload ${i + 1}`}
+                    className="w-full h-full object-cover"
+                  />
+                  <button
+                    onClick={() => removeImage(i)}
+                    className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <span className="material-symbols-outlined text-[12px]">close</span>
+                  </button>
+                </div>
+              ))}
+
+              {images.length < MAX_IMAGES && (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-20 h-20 rounded-xl border-2 border-dashed border-on-surface-variant/20 flex flex-col items-center justify-center gap-1 text-on-surface-variant/50 hover:border-primary/40 hover:text-primary/60 hover:bg-primary/5 transition-all"
+                >
+                  <span className="material-symbols-outlined text-[22px]">add_a_photo</span>
+                  <span className="text-[9px] font-bold">Add</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Footer */}
         <div className="p-5 pt-3 border-t border-surface-container shrink-0">
           <button
             onClick={handleSubmit}
-            disabled={selectedType === null}
+            disabled={selectedType === null || submitting}
             className="w-full h-12 bg-primary text-on-primary font-bold rounded-xl text-sm hover:bg-primary-dim active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            <span className="material-symbols-outlined text-[18px]">send</span>
-            Submit Report
+            {submitting ? (
+              <>
+                <span className="material-symbols-outlined text-[18px] animate-spin">progress_activity</span>
+                Uploading…
+              </>
+            ) : (
+              <>
+                <span className="material-symbols-outlined text-[18px]">send</span>
+                Submit Report
+              </>
+            )}
           </button>
           <p className="text-[10px] text-on-surface-variant/50 text-center mt-2">
             Your report helps improve transit for everyone in Memphis.
