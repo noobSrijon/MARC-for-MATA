@@ -119,13 +119,24 @@ export default function HomeClient() {
         />
       )}
 
-      {/* Floating report count badge */}
-      {reports.length > 0 && (
-        <div className="fixed bottom-20 md:bottom-4 left-4 z-[1500] bg-tertiary text-on-tertiary rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold shadow-lg">
-          <span className="material-symbols-outlined text-[14px]">flag</span>
-          {reports.length} issue{reports.length !== 1 ? "s" : ""} reported
+      {/* Champion badge */}
+      <div className="fixed bottom-20 md:bottom-4 left-4 z-[1500] flex flex-col gap-2">
+        <div className="flex flex-col items-center w-[140px]">
+          <img src="/champ.png" alt="Champion" className="w-[120px] h-[120px] object-contain drop-shadow-lg" />
+          <span
+            className="text-[13px] font-extrabold uppercase tracking-[0.12em] leading-tight text-center mt-[-14px]"
+            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", color: '#D4A017' }}
+          >
+            Rhodes Hackathon<br/>2026 Champion
+          </span>
         </div>
-      )}
+        {reports.length > 0 && (
+          <div className="bg-tertiary text-on-tertiary rounded-full px-3 py-1.5 flex items-center gap-1.5 text-xs font-bold shadow-lg">
+            <span className="material-symbols-outlined text-[14px]">flag</span>
+            {reports.length} issue{reports.length !== 1 ? "s" : ""} reported
+          </div>
+        )}
+      </div>
     </div>
   );
 }
