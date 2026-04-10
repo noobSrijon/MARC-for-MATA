@@ -63,9 +63,7 @@ def get_route_stops(route_id: str):
 
 @bp.route("/next_departures", methods=["GET"])
 def next_departures():
-    """Return next scheduled departure times for a route from a stop.
-    ?route_id=X&from_stop=Y
-    """
+
     route_id = (request.args.get("route_id") or "").strip()
     from_stop = (request.args.get("from_stop") or "").strip()
     if not route_id or not from_stop:

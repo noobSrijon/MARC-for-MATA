@@ -32,7 +32,6 @@ def get_all_reports():
         docs = list(cursor)
         for d in docs:
             d["_id"] = str(d["_id"])
-            # Ensure severityScore exists for older docs
             if "severityScore" not in d:
                 d["severityScore"] = 50
         return jsonify({"reports": docs, "count": len(docs)})

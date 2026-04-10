@@ -66,7 +66,6 @@ def _compute_severity(issue_type: str, description: str) -> int:
         except Exception as e:
             logger.warning("AI severity scoring failed", e)
 
-    
     key = issue_type.lower().strip()
     base = 50
     for pattern, score in _ISSUE_BASE_SCORES.items():
@@ -96,7 +95,7 @@ def _get_db():
 
 
 def _get_gridfs():
-    """Get GridFS bucket for report images. Uses 'report_images' collection."""
+    #Get GridFS bucket for report images. Uses 'report_images' collection.
     db = _get_db()
     if db is None:
         return None
@@ -260,6 +259,7 @@ def ai_note():
                             "Summarize user-submitted reports about a bus route, focusing specifically on "
                             "wheelchair ramp and accessibility issues. Be concise (2-3 sentences max) and practical. "
                             "If there are no ramp-related reports, say so briefly."
+                            "Return entire context in one line."
                         ),
                     },
                     {
@@ -268,7 +268,7 @@ def ai_note():
                             f"Here are recent user reports for bus route {route_short_name}:\n\n"
                             f"{context}\n\n"
                             "What do these reports say about accessibility for ramp and wheelchair users? "
-                            "Give a short, practical summary."
+                           
                         ),
                     },
                 ],
